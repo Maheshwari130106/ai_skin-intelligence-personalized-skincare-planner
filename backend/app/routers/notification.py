@@ -38,6 +38,60 @@ def list_notifications(
     return notifications
 
 
+@router.post("/generate-test")
+def generate_test_notifications(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    from app.services.notification_service import (
+        create_routine_reminder,
+        create_hydration_reminder,
+        create_sleep_reminder,
+        create_replenishment_reminder,
+        create_progress_alert,
+        create_platform_notification,
+    )
+
+    create_routine_reminder(
+        db,
+        current_user.id,
+        "morning skincare routine",
+    )
+
+    create_replenishment_reminder(
+        db,
+        current_user.id,
+        "Niacinamide 10% Face Serum",
+    )
+
+    create_hydration_reminder(
+        db,
+        current_user.id,
+    )
+
+    create_sleep_reminder(
+        db,
+        current_user.id,
+    )
+
+    create_progress_alert(
+        db,
+        current_user.id,
+        "Your recent skin health progress has been updated.",
+    )
+
+    create_platform_notification(
+        db,
+        current_user.id,
+        "Welcome to the latest version of the skincare platform.",
+    )
+
+    return {
+        "ok": True,
+        "message": "Test notifications generated successfully.",
+    }
+
+
 # =========================================================
 # MARK ONE NOTIFICATION AS READ
 # =========================================================

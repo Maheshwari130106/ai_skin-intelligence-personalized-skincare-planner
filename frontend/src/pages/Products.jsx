@@ -378,7 +378,7 @@ export default function Products() {
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    className="w-full h-52 object-cover"
+                    className="w-full h-64 object-contain bg-gradient-to-br from-gray-50 to-violet-50 p-5"
                   />
 
                 ) : (

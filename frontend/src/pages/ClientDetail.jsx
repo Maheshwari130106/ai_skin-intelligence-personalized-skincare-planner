@@ -403,14 +403,25 @@ export default function ClientDetail() {
 
                 <ul className="list-disc list-inside text-sm text-gray-600">
 
-                  {assessment.risk_factors.map(
-                    (risk, index) => (
-                      <li key={index}>
-                        {risk}
-                      </li>
-                    )
-                  )}
+                  {assessment.risk_factors.map((risk, index) => (
+  <li key={risk.id || index}>
+    <div className="font-medium text-gray-700">
+      {risk.risk_name || "Risk factor"}
+    </div>
 
+    {risk.description && (
+      <div className="text-sm text-gray-500 mt-1">
+        {risk.description}
+      </div>
+    )}
+
+    {risk.risk_level && (
+      <span className="inline-block mt-1 text-xs px-2 py-1 rounded-full bg-red-50 text-red-600">
+        {risk.risk_level}
+      </span>
+    )}
+  </li>
+))}
                 </ul>
 
               </div>

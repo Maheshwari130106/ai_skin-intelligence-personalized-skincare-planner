@@ -10,3 +10,27 @@ body {
 .input {
   @apply w-full border border-gray-300 rounded-md px-3 py-2 text-sm;
 }
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5d9f7;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.input:hover {
+  border-color: #c4a7f5;
+}
+
+.input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.input::placeholder {
+  color: #a1a1aa;
+}

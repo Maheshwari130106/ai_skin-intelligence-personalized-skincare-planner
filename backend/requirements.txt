@@ -16,6 +16,7 @@ python-dotenv==1.0.1
 alembic==1.13.2
 authlib==1.7.2
 itsdangerous==2.2.0
+APScheduler==3.11.3
 
 
 # --- Dev / testing ---

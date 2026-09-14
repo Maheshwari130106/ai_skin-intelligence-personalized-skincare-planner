@@ -1,6 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import client from '../api/client'
 
+import {
+  Sun,
+  Moon,
+  CalendarDays,
+  Pencil,
+  RefreshCw,
+  Sparkles,
+  CheckCircle2,
+  Trash2,
+  Plus,
+  Save,
+  X,
+  Leaf,
+  ShieldCheck,
+  Droplets,
+  Clock3,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Settings2,
+} from 'lucide-react'
+
 export default function Routine() {
   const [routine, setRoutine] = useState(null)
   const [history, setHistory] = useState([])
@@ -13,9 +35,9 @@ export default function Routine() {
   const [editing, setEditing] = useState(false)
   const [editRoutine, setEditRoutine] = useState(null)
 
-  // ---------------------------------------------------------
+  // =========================================================
   // LOAD CURRENT ROUTINE
-  // ---------------------------------------------------------
+  // =========================================================
 
   const loadRoutine = async () => {
     try {
@@ -31,9 +53,9 @@ export default function Routine() {
     }
   }
 
-  // ---------------------------------------------------------
-  // LOAD ROUTINE HISTORY
-  // ---------------------------------------------------------
+  // =========================================================
+  // LOAD HISTORY
+  // =========================================================
 
   const loadHistory = async () => {
     try {
@@ -44,9 +66,9 @@ export default function Routine() {
     }
   }
 
-  // ---------------------------------------------------------
+  // =========================================================
   // INITIAL LOAD
-  // ---------------------------------------------------------
+  // =========================================================
 
   useEffect(() => {
     const load = async () => {
@@ -64,9 +86,9 @@ export default function Routine() {
     load()
   }, [])
 
-  // ---------------------------------------------------------
+  // =========================================================
   // GENERATE / REGENERATE
-  // ---------------------------------------------------------
+  // =========================================================
 
   const generate = async () => {
     setError('')
@@ -77,8 +99,6 @@ export default function Routine() {
 
       setRoutine(res.data)
 
-      // Refresh history because regeneration creates
-      // a history entry for the previous routine.
       await loadHistory()
 
       setEditing(false)
@@ -93,33 +113,41 @@ export default function Routine() {
     }
   }
 
-  // ---------------------------------------------------------
-  // START MANUAL EDIT
-  // ---------------------------------------------------------
+  // =========================================================
+  // START EDITING
+  // =========================================================
 
   const startEditing = () => {
     if (!routine) return
 
-    // Deep copy so changes do not immediately modify
-    // the displayed routine.
     const copy = JSON.parse(
       JSON.stringify({
-        morning_routine: routine.morning_routine || [],
-        evening_routine: routine.evening_routine || [],
-        weekly_treatments: routine.weekly_treatments || [],
-        season: routine.season || 'all',
-        notes: routine.notes || '',
+        morning_routine:
+          routine.morning_routine || [],
+        evening_routine:
+          routine.evening_routine || [],
+        weekly_treatments:
+          routine.weekly_treatments || [],
+        season:
+          routine.season || 'all',
+        notes:
+          routine.notes || '',
       })
     )
 
     setEditRoutine(copy)
     setEditing(true)
     setError('')
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
   }
 
-  // ---------------------------------------------------------
+  // =========================================================
   // CANCEL EDIT
-  // ---------------------------------------------------------
+  // =========================================================
 
   const cancelEditing = () => {
     setEditing(false)
@@ -127,9 +155,9 @@ export default function Routine() {
     setError('')
   }
 
-  // ---------------------------------------------------------
-  // UPDATE SIMPLE FIELD
-  // ---------------------------------------------------------
+  // =========================================================
+  // UPDATE FIELD
+  // =========================================================
 
   const updateField = (field, value) => {
     setEditRoutine((previous) => ({
@@ -138,9 +166,9 @@ export default function Routine() {
     }))
   }
 
-  // ---------------------------------------------------------
+  // =========================================================
   // UPDATE ROUTINE STEP
-  // ---------------------------------------------------------
+  // =========================================================
 
   const updateStep = (
     routineType,
@@ -149,7 +177,9 @@ export default function Routine() {
     value
   ) => {
     setEditRoutine((previous) => {
-      const updated = [...previous[routineType]]
+      const updated = [
+        ...(previous[routineType] || []),
+      ]
 
       updated[index] = {
         ...updated[index],
@@ -163,16 +193,17 @@ export default function Routine() {
     })
   }
 
-  // ---------------------------------------------------------
-  // ADD ROUTINE STEP
-  // ---------------------------------------------------------
+  // =========================================================
+  // ADD STEP
+  // =========================================================
 
   const addStep = (routineType) => {
     setEditRoutine((previous) => {
       const updated = [
         ...(previous[routineType] || []),
         {
-          step: (previous[routineType]?.length || 0) + 1,
+          step:
+            (previous[routineType]?.length || 0) + 1,
           category: '',
           instruction: '',
           product_suggestion: '',
@@ -186,13 +217,18 @@ export default function Routine() {
     })
   }
 
-  // ---------------------------------------------------------
-  // DELETE ROUTINE STEP
-  // ---------------------------------------------------------
+  // =========================================================
+  // DELETE STEP
+  // =========================================================
 
-  const deleteStep = (routineType, index) => {
+  const deleteStep = (
+    routineType,
+    index
+  ) => {
     setEditRoutine((previous) => {
-      const updated = previous[routineType]
+      const updated = (
+        previous[routineType] || []
+      )
         .filter((_, i) => i !== index)
         .map((step, i) => ({
           ...step,
@@ -206,9 +242,9 @@ export default function Routine() {
     })
   }
 
-  // ---------------------------------------------------------
-  // UPDATE WEEKLY TREATMENT
-  // ---------------------------------------------------------
+  // =========================================================
+  // UPDATE WEEKLY
+  // =========================================================
 
   const updateWeeklyTreatment = (
     index,
@@ -217,7 +253,7 @@ export default function Routine() {
   ) => {
     setEditRoutine((previous) => {
       const updated = [
-        ...previous.weekly_treatments,
+        ...(previous.weekly_treatments || []),
       ]
 
       updated[index] = {
@@ -232,9 +268,9 @@ export default function Routine() {
     })
   }
 
-  // ---------------------------------------------------------
-  // ADD WEEKLY TREATMENT
-  // ---------------------------------------------------------
+  // =========================================================
+  // ADD WEEKLY
+  // =========================================================
 
   const addWeeklyTreatment = () => {
     setEditRoutine((previous) => ({
@@ -250,23 +286,24 @@ export default function Routine() {
     }))
   }
 
-  // ---------------------------------------------------------
-  // DELETE WEEKLY TREATMENT
-  // ---------------------------------------------------------
+  // =========================================================
+  // DELETE WEEKLY
+  // =========================================================
 
-  const deleteWeeklyTreatment = (index) => {
+  const deleteWeeklyTreatment = (
+    index
+  ) => {
     setEditRoutine((previous) => ({
       ...previous,
-      weekly_treatments:
-        previous.weekly_treatments.filter(
-          (_, i) => i !== index
-        ),
+      weekly_treatments: (
+        previous.weekly_treatments || []
+      ).filter((_, i) => i !== index),
     }))
   }
 
-  // ---------------------------------------------------------
-  // SAVE MANUAL CHANGES
-  // ---------------------------------------------------------
+  // =========================================================
+  // SAVE
+  // =========================================================
 
   const saveChanges = async () => {
     if (!editRoutine) return
@@ -285,7 +322,6 @@ export default function Routine() {
       setEditing(false)
       setEditRoutine(null)
 
-      // Refresh history.
       await loadHistory()
     } catch (err) {
       setError(
@@ -297,221 +333,932 @@ export default function Routine() {
     }
   }
 
-  // ---------------------------------------------------------
+  // =========================================================
   // LOADING
-  // ---------------------------------------------------------
+  // =========================================================
 
   if (loading) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Your Skincare Routine
-        </h1>
+      <div className="min-h-[70vh] bg-slate-50 p-6">
+        <div className="max-w-7xl mx-auto">
 
-        <p className="text-gray-500">
-          Loading your routine...
-        </p>
+          <div className="animate-pulse space-y-6">
+
+            <div className="h-8 w-64 bg-gray-200 rounded-lg" />
+
+            <div className="h-4 w-96 bg-gray-200 rounded" />
+
+            <div className="grid lg:grid-cols-3 gap-6">
+
+              <div className="lg:col-span-2 h-72 bg-white rounded-3xl" />
+
+              <div className="h-72 bg-white rounded-3xl" />
+
+            </div>
+
+          </div>
+
+        </div>
       </div>
     )
   }
 
-  // ---------------------------------------------------------
+  // =========================================================
   // PAGE
-  // ---------------------------------------------------------
+  // =========================================================
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-slate-50">
 
-      {/* -------------------------------------------------- */}
-      {/* HEADER */}
-      {/* -------------------------------------------------- */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        {/* ================================================= */}
+        {/* HEADER */}
+        {/* ================================================= */}
 
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Your Skincare Routine
-          </h1>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
 
-          {routine && (
-            <p className="text-sm text-gray-500 mt-1">
-              Personalized {routine.season} routine
+          <div>
+
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center">
+                <Sparkles
+                  size={19}
+                  className="text-violet-600"
+                />
+              </div>
+
+              <span className="text-sm font-semibold text-violet-600">
+                AI Skin Intelligence
+              </span>
+            </div>
+
+            <h1 className="text-3xl font-bold text-gray-900">
+              Your Skincare Routine
+            </h1>
+
+            <p className="text-gray-500 mt-1">
+              Your personalized routine for healthier,
+              balanced skin.
             </p>
-          )}
+
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+
+            {routine && !editing && (
+              <button
+                onClick={startEditing}
+                className="
+                  inline-flex items-center gap-2
+                  px-5 py-3
+                  rounded-xl
+                  border border-gray-200
+                  bg-white
+                  text-gray-800
+                  font-semibold
+                  shadow-sm
+                  hover:bg-gray-50
+                  transition
+                "
+              >
+                <Pencil size={17} />
+                Edit Routine
+              </button>
+            )}
+
+            {!editing && (
+              <button
+                onClick={generate}
+                disabled={generating}
+                className="
+                  inline-flex items-center gap-2
+                  px-5 py-3
+                  rounded-xl
+                  bg-gray-950
+                  text-white
+                  font-semibold
+                  shadow-sm
+                  hover:bg-gray-800
+                  transition
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                "
+              >
+                <RefreshCw
+                  size={17}
+                  className={
+                    generating
+                      ? 'animate-spin'
+                      : ''
+                  }
+                />
+
+                {generating
+                  ? 'Generating...'
+                  : routine
+                    ? 'Regenerate Routine'
+                    : 'Generate Routine'}
+              </button>
+            )}
+
+          </div>
+
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        {/* ================================================= */}
+        {/* ERROR */}
+        {/* ================================================= */}
 
-          {routine && !editing && (
-            <button
-              onClick={startEditing}
-              className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-800 text-sm font-medium hover:bg-gray-50"
-            >
-              Edit Routine
-            </button>
+        {error && (
+          <div className="
+            mb-6
+            rounded-2xl
+            border border-red-200
+            bg-red-50
+            px-5 py-4
+            text-sm text-red-700
+          ">
+            {error}
+          </div>
+        )}
+
+        {/* ================================================= */}
+        {/* NO ROUTINE */}
+        {/* ================================================= */}
+
+        {!routine && !error && (
+          <EmptyRoutine
+            generating={generating}
+            onGenerate={generate}
+          />
+        )}
+
+        {/* ================================================= */}
+        {/* EDIT MODE */}
+        {/* ================================================= */}
+
+        {routine &&
+          editing &&
+          editRoutine && (
+            <EditRoutine
+              data={editRoutine}
+              saving={saving}
+              onCancel={cancelEditing}
+              onSave={saveChanges}
+              onFieldChange={updateField}
+              onStepChange={updateStep}
+              onAddStep={addStep}
+              onDeleteStep={deleteStep}
+              onWeeklyChange={
+                updateWeeklyTreatment
+              }
+              onAddWeekly={
+                addWeeklyTreatment
+              }
+              onDeleteWeekly={
+                deleteWeeklyTreatment
+              }
+            />
           )}
 
-          {!editing && (
-            <button
-              onClick={generate}
-              disabled={generating}
-              className="px-5 py-2.5 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {generating
-                ? 'Generating...'
-                : routine
-                  ? 'Regenerate Routine'
-                  : 'Generate Routine'}
-            </button>
-          )}
+        {/* ================================================= */}
+        {/* CURRENT ROUTINE */}
+        {/* ================================================= */}
+
+        {routine && !editing && (
+          <>
+
+            {/* --------------------------------------------- */}
+            {/* ROUTINE SUMMARY */}
+            {/* --------------------------------------------- */}
+
+            <RoutineSummary routine={routine} />
+
+            {/* --------------------------------------------- */}
+            {/* MORNING + EVENING */}
+            {/* --------------------------------------------- */}
+
+            <div className="
+              grid
+              lg:grid-cols-2
+              gap-6
+              mt-6
+            ">
+
+              <RoutineCard
+                title="Morning Routine"
+                subtitle="Start your day with healthy skin"
+                icon={
+                  <Sun
+                    size={22}
+                    className="text-orange-500"
+                  />
+                }
+                iconBg="bg-orange-50"
+                steps={
+                  routine.morning_routine || []
+                }
+              />
+
+              <RoutineCard
+                title="Evening Routine"
+                subtitle="Repair and restore overnight"
+                icon={
+                  <Moon
+                    size={22}
+                    className="text-indigo-500"
+                  />
+                }
+                iconBg="bg-indigo-50"
+                steps={
+                  routine.evening_routine || []
+                }
+              />
+
+            </div>
+
+            {/* --------------------------------------------- */}
+            {/* WEEKLY TREATMENTS */}
+            {/* --------------------------------------------- */}
+
+            <WeeklyTreatments
+              treatments={
+                routine.weekly_treatments || []
+              }
+            />
+
+            {/* --------------------------------------------- */}
+            {/* NOTES */}
+            {/* --------------------------------------------- */}
+
+            {routine.notes && (
+              <div className="
+                mt-6
+                bg-white
+                rounded-3xl
+                border border-gray-100
+                shadow-sm
+                p-6
+              ">
+
+                <div className="flex items-start gap-4">
+
+                  <div className="
+                    w-11 h-11
+                    rounded-2xl
+                    bg-violet-50
+                    flex items-center justify-center
+                    shrink-0
+                  ">
+                    <FileText
+                      size={21}
+                      className="text-violet-600"
+                    />
+                  </div>
+
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">
+                      Personalized Notes
+                    </h2>
+
+                    <p className="
+                      text-sm
+                      text-gray-600
+                      leading-6
+                      mt-2
+                      whitespace-pre-line
+                    ">
+                      {routine.notes}
+                    </p>
+                  </div>
+
+                </div>
+
+              </div>
+            )}
+
+            {/* --------------------------------------------- */}
+            {/* ROUTINE HISTORY */}
+            {/* --------------------------------------------- */}
+
+            <RoutineHistory
+              history={history}
+            />
+
+          </>
+        )}
+
+      </div>
+
+    </div>
+  )
+}
+
+
+/* ==========================================================
+   EMPTY ROUTINE
+========================================================== */
+
+function EmptyRoutine({
+  generating,
+  onGenerate,
+}) {
+  return (
+    <div className="
+      relative
+      overflow-hidden
+      rounded-3xl
+      bg-gradient-to-br
+      from-violet-600
+      via-purple-600
+      to-fuchsia-500
+      p-8
+      lg:p-12
+      text-white
+      shadow-xl
+    ">
+
+      <div className="
+        absolute
+        -right-20
+        -top-20
+        w-72 h-72
+        rounded-full
+        bg-white/10
+      " />
+
+      <div className="
+        absolute
+        -bottom-24
+        right-32
+        w-64 h-64
+        rounded-full
+        bg-white/10
+      " />
+
+      <div className="relative max-w-2xl">
+
+        <div className="
+          w-14 h-14
+          rounded-2xl
+          bg-white/15
+          flex items-center justify-center
+          mb-6
+        ">
+          <Sparkles size={27} />
+        </div>
+
+        <h2 className="
+          text-3xl
+          lg:text-4xl
+          font-bold
+          mb-3
+        ">
+          Build your personalized routine
+        </h2>
+
+        <p className="
+          text-white/80
+          leading-7
+          max-w-xl
+          mb-7
+        ">
+          Generate an AI-powered skincare routine
+          based on your skin profile, concerns,
+          lifestyle and current needs.
+        </p>
+
+        <button
+          onClick={onGenerate}
+          disabled={generating}
+          className="
+            inline-flex
+            items-center
+            gap-2
+            px-6 py-3.5
+            rounded-xl
+            bg-white
+            text-violet-700
+            font-bold
+            hover:bg-violet-50
+            transition
+            disabled:opacity-60
+          "
+        >
+          <Sparkles size={18} />
+
+          {generating
+            ? 'Creating your routine...'
+            : 'Generate My Routine'}
+        </button>
+
+      </div>
+
+    </div>
+  )
+}
+
+
+/* ==========================================================
+   ROUTINE SUMMARY
+========================================================== */
+
+function RoutineSummary({ routine }) {
+  const morning =
+    routine.morning_routine?.length || 0
+
+  const evening =
+    routine.evening_routine?.length || 0
+
+  const weekly =
+    routine.weekly_treatments?.length || 0
+
+  return (
+    <div className="
+      grid
+      grid-cols-1
+      sm:grid-cols-2
+      xl:grid-cols-4
+      gap-5
+    ">
+
+      <SummaryCard
+        icon={<Sun size={21} />}
+        iconBg="bg-orange-50"
+        iconColor="text-orange-500"
+        title="Morning Steps"
+        value={morning}
+        subtitle="Daily care"
+      />
+
+      <SummaryCard
+        icon={<Moon size={21} />}
+        iconBg="bg-indigo-50"
+        iconColor="text-indigo-500"
+        title="Evening Steps"
+        value={evening}
+        subtitle="Night care"
+      />
+
+      <SummaryCard
+        icon={<CalendarDays size={21} />}
+        iconBg="bg-cyan-50"
+        iconColor="text-cyan-500"
+        title="Weekly Treatments"
+        value={weekly}
+        subtitle="This routine"
+      />
+
+      <SummaryCard
+        icon={<Leaf size={21} />}
+        iconBg="bg-emerald-50"
+        iconColor="text-emerald-500"
+        title="Current Season"
+        value={
+          routine.season
+            ? capitalize(routine.season)
+            : 'All'
+        }
+        subtitle="Personalized"
+      />
+
+    </div>
+  )
+}
+
+
+/* ==========================================================
+   SUMMARY CARD
+========================================================== */
+
+function SummaryCard({
+  icon,
+  iconBg,
+  iconColor,
+  title,
+  value,
+  subtitle,
+}) {
+  return (
+    <div className="
+      bg-white
+      rounded-3xl
+      border border-gray-100
+      shadow-sm
+      p-5
+      hover:shadow-md
+      transition
+    ">
+
+      <div className="flex items-start justify-between">
+
+        <div>
+          <p className="text-sm text-gray-500">
+            {title}
+          </p>
+
+          <p className="
+            text-2xl
+            font-bold
+            text-gray-900
+            mt-2
+          ">
+            {value}
+          </p>
+
+          <p className="
+            text-xs
+            text-gray-400
+            mt-1
+          ">
+            {subtitle}
+          </p>
+        </div>
+
+        <div className={`
+          w-11 h-11
+          rounded-2xl
+          ${iconBg}
+          ${iconColor}
+          flex items-center justify-center
+        `}>
+          {icon}
+        </div>
+
+      </div>
+
+    </div>
+  )
+}
+
+
+/* ==========================================================
+   ROUTINE CARD
+========================================================== */
+
+function RoutineCard({
+  title,
+  subtitle,
+  icon,
+  iconBg,
+  steps = [],
+}) {
+  return (
+    <div className="
+      bg-white
+      rounded-3xl
+      border border-gray-100
+      shadow-sm
+      overflow-hidden
+    ">
+
+      {/* Header */}
+
+      <div className="
+        px-6
+        py-5
+        border-b border-gray-100
+        flex items-center justify-between
+      ">
+
+        <div className="flex items-center gap-3">
+
+          <div className={`
+            w-11 h-11
+            rounded-2xl
+            ${iconBg}
+            flex items-center justify-center
+          `}>
+            {icon}
+          </div>
+
+          <div>
+            <h2 className="
+              text-lg
+              font-bold
+              text-gray-900
+            ">
+              {title}
+            </h2>
+
+            <p className="
+              text-xs
+              text-gray-500
+              mt-0.5
+            ">
+              {subtitle}
+            </p>
+          </div>
+
+        </div>
+
+        <div className="
+          hidden sm:flex
+          items-center gap-1.5
+          text-xs
+          font-semibold
+          text-emerald-600
+          bg-emerald-50
+          px-3 py-1.5
+          rounded-full
+        ">
+          <CheckCircle2 size={14} />
+          Daily
+        </div>
+
+      </div>
+
+      {/* Steps */}
+
+      <div className="p-5 space-y-3">
+
+        {steps.length > 0 ? (
+          steps.map((step, index) => (
+            <DisplayStep
+              key={index}
+              step={step}
+              index={index}
+            />
+          ))
+        ) : (
+          <div className="
+            rounded-2xl
+            bg-gray-50
+            border border-dashed
+            border-gray-200
+            p-6
+            text-center
+          ">
+            <p className="text-sm text-gray-500">
+              No steps available.
+            </p>
+          </div>
+        )}
+
+      </div>
+
+    </div>
+  )
+}
+
+
+/* ==========================================================
+   DISPLAY STEP
+========================================================== */
+
+function DisplayStep({
+  step,
+  index,
+}) {
+  return (
+    <div className="
+      group
+      relative
+      rounded-2xl
+      bg-slate-50
+      border border-transparent
+      hover:border-violet-100
+      hover:bg-violet-50/30
+      p-4
+      transition
+    ">
+
+      <div className="flex gap-4">
+
+        {/* Number */}
+
+        <div className="
+          w-9 h-9
+          rounded-xl
+          bg-white
+          border border-gray-200
+          flex items-center justify-center
+          shrink-0
+          text-sm
+          font-bold
+          text-violet-600
+          shadow-sm
+        ">
+          {step.step ?? index + 1}
+        </div>
+
+        {/* Content */}
+
+        <div className="min-w-0 flex-1">
+
+          <div className="
+            flex
+            items-center
+            gap-2
+            flex-wrap
+          ">
+
+            <h3 className="
+              font-bold
+              text-gray-900
+            ">
+              {step.category ||
+                `Step ${index + 1}`}
+            </h3>
+
+            {step.product_suggestion && (
+              <span className="
+                text-[11px]
+                font-semibold
+                text-violet-700
+                bg-violet-100
+                px-2 py-1
+                rounded-full
+              ">
+                {step.product_suggestion}
+              </span>
+            )}
+
+          </div>
+
+          <p className="
+            text-sm
+            text-gray-600
+            leading-6
+            mt-1.5
+          ">
+            {step.instruction ||
+              'Follow this step as recommended.'}
+          </p>
 
         </div>
 
       </div>
 
-      {/* -------------------------------------------------- */}
-      {/* ERROR */}
-      {/* -------------------------------------------------- */}
+    </div>
+  )
+}
 
-      {error && (
-        <div className="mb-5 p-4 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
-          {error}
-        </div>
-      )}
 
-      {/* -------------------------------------------------- */}
-      {/* NO ROUTINE */}
-      {/* -------------------------------------------------- */}
+/* ==========================================================
+   WEEKLY TREATMENTS
+========================================================== */
 
-      {!routine && !error && (
-        <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100 text-center">
+function WeeklyTreatments({
+  treatments = [],
+}) {
+  return (
+    <div className="
+      mt-6
+      bg-white
+      rounded-3xl
+      border border-gray-100
+      shadow-sm
+      p-6
+    ">
 
-          <div className="text-4xl mb-3">
-            🧴
+      <div className="
+        flex
+        items-center
+        justify-between
+        mb-5
+      ">
+
+        <div className="flex items-center gap-3">
+
+          <div className="
+            w-11 h-11
+            rounded-2xl
+            bg-cyan-50
+            flex items-center justify-center
+          ">
+            <CalendarDays
+              size={21}
+              className="text-cyan-600"
+            />
           </div>
 
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">
-            No skincare routine yet
-          </h2>
+          <div>
+            <h2 className="
+              text-lg
+              font-bold
+              text-gray-900
+            ">
+              Weekly Treatments
+            </h2>
 
-          <p className="text-sm text-gray-500 mb-5">
-            Generate a personalized routine based on your
-            skin profile and concerns.
-          </p>
-
-          <button
-            onClick={generate}
-            disabled={generating}
-            className="px-5 py-2.5 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
-          >
-            {generating
-              ? 'Generating...'
-              : 'Generate Routine'}
-          </button>
+            <p className="
+              text-xs
+              text-gray-500
+              mt-0.5
+            ">
+              Additional care throughout the week
+            </p>
+          </div>
 
         </div>
-      )}
 
-      {/* -------------------------------------------------- */}
-      {/* EDIT MODE */}
-      {/* -------------------------------------------------- */}
+      </div>
 
-      {routine && editing && editRoutine && (
-        <EditRoutine
-          data={editRoutine}
-          saving={saving}
-          onCancel={cancelEditing}
-          onSave={saveChanges}
-          onFieldChange={updateField}
-          onStepChange={updateStep}
-          onAddStep={addStep}
-          onDeleteStep={deleteStep}
-          onWeeklyChange={updateWeeklyTreatment}
-          onAddWeekly={addWeeklyTreatment}
-          onDeleteWeekly={deleteWeeklyTreatment}
-        />
-      )}
+      {treatments.length > 0 ? (
+        <div className="
+          grid
+          md:grid-cols-2
+          xl:grid-cols-3
+          gap-4
+        ">
 
-      {/* -------------------------------------------------- */}
-      {/* CURRENT ROUTINE */}
-      {/* -------------------------------------------------- */}
+          {treatments.map((item, index) => (
+            <div
+              key={index}
+              className="
+                rounded-2xl
+                border border-gray-100
+                bg-slate-50
+                p-5
+                hover:bg-white
+                hover:shadow-sm
+                transition
+              "
+            >
 
-      {routine && !editing && (
-        <>
-          <div className="grid sm:grid-cols-2 gap-4">
+              <div className="
+                flex
+                items-center
+                justify-between
+                mb-4
+              ">
 
-            {/* Morning */}
-            <RoutineCard
-              title="☀️ Morning"
-              steps={routine.morning_routine}
-            />
+                <span className="
+                  inline-flex
+                  items-center
+                  gap-1.5
+                  text-xs
+                  font-bold
+                  text-violet-700
+                  bg-violet-100
+                  px-3 py-1.5
+                  rounded-full
+                ">
+                  <Clock3 size={13} />
+                  {item.day || 'As needed'}
+                </span>
 
-            {/* Evening */}
-            <RoutineCard
-              title="🌙 Evening"
-              steps={routine.evening_routine}
-            />
+                <span className="
+                  w-8 h-8
+                  rounded-xl
+                  bg-white
+                  flex items-center justify-center
+                  text-sm
+                  font-bold
+                  text-gray-500
+                ">
+                  {index + 1}
+                </span>
 
-            {/* Weekly Treatments */}
-            <div className="sm:col-span-2 bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+              </div>
 
-              <h2 className="font-semibold text-lg text-gray-800 mb-4">
-                📅 Weekly Treatments
-              </h2>
+              <h3 className="
+                font-bold
+                text-gray-900
+              ">
+                {item.treatment ||
+                  'Weekly treatment'}
+              </h3>
 
-              {routine.weekly_treatments?.length > 0 ? (
-                <ul className="space-y-3">
-
-                  {routine.weekly_treatments.map(
-                    (t, i) => (
-                      <li
-                        key={i}
-                        className="p-3 rounded-lg bg-gray-50 text-sm text-gray-700"
-                      >
-                        <div>
-                          <span className="font-semibold">
-                            {t.day}
-                          </span>
-                        </div>
-
-                        <div className="font-medium mt-1">
-                          {t.treatment}
-                        </div>
-
-                        <div className="text-gray-500 mt-1">
-                          {t.purpose}
-                        </div>
-                      </li>
-                    )
-                  )}
-
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  No weekly treatments recommended.
+              {item.purpose && (
+                <p className="
+                  text-sm
+                  text-gray-500
+                  leading-6
+                  mt-2
+                ">
+                  {item.purpose}
                 </p>
               )}
 
             </div>
+          ))}
 
-            {/* Notes */}
-            {routine.notes && (
-              <div className="sm:col-span-2 bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-                <h2 className="font-semibold text-lg text-gray-800 mb-2">
-                  📝 Notes
-                </h2>
+        </div>
+      ) : (
+        <div className="
+          rounded-2xl
+          bg-gray-50
+          border border-dashed
+          border-gray-200
+          p-7
+          text-center
+        ">
+          <CalendarDays
+            size={26}
+            className="
+              mx-auto
+              text-gray-300
+              mb-2
+            "
+          />
 
-                <p className="text-sm text-gray-600 whitespace-pre-line">
-                  {routine.notes}
-                </p>
-              </div>
-            )}
-
-          </div>
-
-          {/* Routine History */}
-          <RoutineHistory history={history} />
-        </>
+          <p className="text-sm text-gray-500">
+            No weekly treatments recommended.
+          </p>
+        </div>
       )}
 
     </div>
@@ -537,23 +1284,93 @@ function EditRoutine({
   onDeleteWeekly,
 }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
 
-      {/* Edit header */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <h2 className="font-semibold text-blue-900">
-          ✏️ Edit Your Routine
-        </h2>
+      {/* Edit banner */}
 
-        <p className="text-sm text-blue-700 mt-1">
-          You can manually change the routine without
-          regenerating your personalized recommendations.
-        </p>
+      <div className="
+        rounded-3xl
+        bg-gradient-to-r
+        from-violet-600
+        to-fuchsia-500
+        p-6
+        text-white
+        shadow-lg
+      ">
+
+        <div className="
+          flex
+          flex-col
+          md:flex-row
+          md:items-center
+          md:justify-between
+          gap-4
+        ">
+
+          <div className="flex items-center gap-4">
+
+            <div className="
+              w-12 h-12
+              rounded-2xl
+              bg-white/15
+              flex items-center justify-center
+            ">
+              <Pencil size={22} />
+            </div>
+
+            <div>
+              <h2 className="
+                text-xl
+                font-bold
+              ">
+                Edit Your Routine
+              </h2>
+
+              <p className="
+                text-sm
+                text-white/75
+                mt-1
+              ">
+                Make changes to your personalized
+                skincare plan.
+              </p>
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={saving}
+            className="
+              inline-flex
+              items-center
+              justify-center
+              gap-2
+              px-4 py-2.5
+              rounded-xl
+              bg-white/15
+              hover:bg-white/25
+              transition
+              disabled:opacity-50
+            "
+          >
+            <X size={17} />
+            Cancel
+          </button>
+
+        </div>
+
       </div>
 
       {/* Morning */}
+
       <EditableRoutineSection
-        title="☀️ Morning Routine"
+        title="Morning Routine"
+        subtitle="Your morning skincare steps"
+        icon={<Sun size={21} />}
+        iconBg="bg-orange-50"
+        iconColor="text-orange-500"
         routineType="morning_routine"
         steps={data.morning_routine}
         onStepChange={onStepChange}
@@ -562,8 +1379,13 @@ function EditRoutine({
       />
 
       {/* Evening */}
+
       <EditableRoutineSection
-        title="🌙 Evening Routine"
+        title="Evening Routine"
+        subtitle="Your nighttime skincare steps"
+        icon={<Moon size={21} />}
+        iconBg="bg-indigo-50"
+        iconColor="text-indigo-500"
         routineType="evening_routine"
         steps={data.evening_routine}
         onStepChange={onStepChange}
@@ -572,20 +1394,74 @@ function EditRoutine({
       />
 
       {/* Weekly */}
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
 
-        <div className="flex items-center justify-between mb-4">
+      <div className="
+        bg-white
+        rounded-3xl
+        shadow-sm
+        border border-gray-100
+        p-6
+      ">
 
-          <h2 className="font-semibold text-lg text-gray-800">
-            📅 Weekly Treatments
-          </h2>
+        <div className="
+          flex
+          items-center
+          justify-between
+          gap-3
+          mb-5
+        ">
+
+          <div className="flex items-center gap-3">
+
+            <div className="
+              w-11 h-11
+              rounded-2xl
+              bg-cyan-50
+              flex items-center justify-center
+            ">
+              <CalendarDays
+                size={21}
+                className="text-cyan-600"
+              />
+            </div>
+
+            <div>
+              <h2 className="
+                text-lg
+                font-bold
+                text-gray-900
+              ">
+                Weekly Treatments
+              </h2>
+
+              <p className="
+                text-xs
+                text-gray-500
+              ">
+                Add additional weekly care
+              </p>
+            </div>
+
+          </div>
 
           <button
             type="button"
             onClick={onAddWeekly}
-            className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm hover:bg-gray-200"
+            className="
+              inline-flex
+              items-center
+              gap-1.5
+              px-3.5 py-2
+              rounded-xl
+              bg-violet-50
+              text-violet-700
+              text-sm
+              font-semibold
+              hover:bg-violet-100
+            "
           >
-            + Add Treatment
+            <Plus size={16} />
+            Add Treatment
           </button>
 
         </div>
@@ -593,69 +1469,99 @@ function EditRoutine({
         <div className="space-y-4">
 
           {data.weekly_treatments?.length > 0 ? (
-            data.weekly_treatments.map((item, index) => (
-              <div
-                key={index}
-                className="p-4 rounded-lg bg-gray-50 border border-gray-200"
-              >
+            data.weekly_treatments.map(
+              (item, index) => (
+                <div
+                  key={index}
+                  className="
+                    rounded-2xl
+                    bg-slate-50
+                    border border-gray-100
+                    p-5
+                  "
+                >
 
-                <div className="grid sm:grid-cols-3 gap-3">
+                  <div className="
+                    grid
+                    md:grid-cols-3
+                    gap-4
+                  ">
 
-                  <Input
-                    label="Day"
-                    value={item.day || ''}
-                    onChange={(value) =>
-                      onWeeklyChange(
-                        index,
-                        'day',
-                        value
-                      )
+                    <Input
+                      label="Day"
+                      value={item.day || ''}
+                      onChange={(value) =>
+                        onWeeklyChange(
+                          index,
+                          'day',
+                          value
+                        )
+                      }
+                      placeholder="Monday"
+                    />
+
+                    <Input
+                      label="Treatment"
+                      value={
+                        item.treatment || ''
+                      }
+                      onChange={(value) =>
+                        onWeeklyChange(
+                          index,
+                          'treatment',
+                          value
+                        )
+                      }
+                      placeholder="Exfoliation"
+                    />
+
+                    <Input
+                      label="Purpose"
+                      value={
+                        item.purpose || ''
+                      }
+                      onChange={(value) =>
+                        onWeeklyChange(
+                          index,
+                          'purpose',
+                          value
+                        )
+                      }
+                      placeholder="Remove dead skin"
+                    />
+
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onDeleteWeekly(index)
                     }
-                    placeholder="Monday"
-                  />
-
-                  <Input
-                    label="Treatment"
-                    value={item.treatment || ''}
-                    onChange={(value) =>
-                      onWeeklyChange(
-                        index,
-                        'treatment',
-                        value
-                      )
-                    }
-                    placeholder="Exfoliation"
-                  />
-
-                  <Input
-                    label="Purpose"
-                    value={item.purpose || ''}
-                    onChange={(value) =>
-                      onWeeklyChange(
-                        index,
-                        'purpose',
-                        value
-                      )
-                    }
-                    placeholder="Remove dead skin"
-                  />
+                    className="
+                      mt-4
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      text-sm
+                      font-medium
+                      text-red-500
+                      hover:text-red-700
+                    "
+                  >
+                    <Trash2 size={15} />
+                    Remove treatment
+                  </button>
 
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    onDeleteWeekly(index)
-                  }
-                  className="mt-3 text-sm text-red-600 hover:text-red-800"
-                >
-                  Remove treatment
-                </button>
-
-              </div>
-            ))
+              )
+            )
           ) : (
-            <p className="text-sm text-gray-500">
+            <p className="
+              text-sm
+              text-gray-500
+              text-center
+              py-5
+            ">
               No weekly treatments.
             </p>
           )}
@@ -664,25 +1570,70 @@ function EditRoutine({
 
       </div>
 
-      {/* Season + Notes */}
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+      {/* Settings */}
 
-        <h2 className="font-semibold text-lg text-gray-800 mb-4">
-          ⚙️ Routine Settings
-        </h2>
+      <div className="
+        bg-white
+        rounded-3xl
+        shadow-sm
+        border border-gray-100
+        p-6
+      ">
+
+        <div className="flex items-center gap-3 mb-5">
+
+          <div className="
+            w-11 h-11
+            rounded-2xl
+            bg-gray-100
+            flex items-center justify-center
+          ">
+            <Settings2
+              size={21}
+              className="text-gray-600"
+            />
+          </div>
+
+          <div>
+            <h2 className="
+              text-lg
+              font-bold
+              text-gray-900
+            ">
+              Routine Settings
+            </h2>
+
+            <p className="
+              text-xs
+              text-gray-500
+            ">
+              Adjust your routine information
+            </p>
+          </div>
+
+        </div>
 
         <Input
           label="Season"
           value={data.season || ''}
           onChange={(value) =>
-            onFieldChange('season', value)
+            onFieldChange(
+              'season',
+              value
+            )
           }
           placeholder="all"
         />
 
-        <div className="mt-4">
+        <div className="mt-5">
 
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="
+            block
+            text-sm
+            font-semibold
+            text-gray-700
+            mb-2
+          ">
             Notes
           </label>
 
@@ -694,8 +1645,22 @@ function EditRoutine({
                 e.target.value
               )
             }
-            rows={4}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+            rows={5}
+            className="
+              w-full
+              rounded-2xl
+              border border-gray-200
+              bg-gray-50
+              px-4 py-3
+              text-sm
+              text-gray-800
+              outline-none
+              focus:bg-white
+              focus:border-violet-400
+              focus:ring-4
+              focus:ring-violet-100
+              transition
+            "
             placeholder="Add notes about your routine..."
           />
 
@@ -703,15 +1668,34 @@ function EditRoutine({
 
       </div>
 
-      {/* Buttons */}
-      <div className="flex justify-end gap-3 pb-4">
+      {/* Save buttons */}
+
+      <div className="
+        flex
+        justify-end
+        gap-3
+        pb-6
+      ">
 
         <button
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+          className="
+            inline-flex
+            items-center
+            gap-2
+            px-5 py-3
+            rounded-xl
+            border border-gray-200
+            bg-white
+            text-gray-700
+            font-semibold
+            hover:bg-gray-50
+            disabled:opacity-50
+          "
         >
+          <X size={17} />
           Cancel
         </button>
 
@@ -719,9 +1703,25 @@ function EditRoutine({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="px-5 py-2.5 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+          className="
+            inline-flex
+            items-center
+            gap-2
+            px-6 py-3
+            rounded-xl
+            bg-violet-600
+            text-white
+            font-semibold
+            shadow-sm
+            hover:bg-violet-700
+            disabled:opacity-50
+          "
         >
-          {saving ? 'Saving...' : 'Save Changes'}
+          <Save size={17} />
+
+          {saving
+            ? 'Saving...'
+            : 'Save Changes'}
         </button>
 
       </div>
@@ -732,11 +1732,15 @@ function EditRoutine({
 
 
 /* ==========================================================
-   EDITABLE MORNING / EVENING SECTION
+   EDITABLE ROUTINE SECTION
 ========================================================== */
 
 function EditableRoutineSection({
   title,
+  subtitle,
+  icon,
+  iconBg,
+  iconColor,
   routineType,
   steps = [],
   onStepChange,
@@ -744,20 +1748,73 @@ function EditableRoutineSection({
   onDeleteStep,
 }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+    <div className="
+      bg-white
+      rounded-3xl
+      shadow-sm
+      border border-gray-100
+      p-6
+    ">
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="
+        flex
+        items-center
+        justify-between
+        gap-3
+        mb-5
+      ">
 
-        <h2 className="font-semibold text-lg text-gray-800">
-          {title}
-        </h2>
+        <div className="flex items-center gap-3">
+
+          <div className={`
+            w-11 h-11
+            rounded-2xl
+            ${iconBg}
+            ${iconColor}
+            flex items-center justify-center
+          `}>
+            {icon}
+          </div>
+
+          <div>
+            <h2 className="
+              text-lg
+              font-bold
+              text-gray-900
+            ">
+              {title}
+            </h2>
+
+            <p className="
+              text-xs
+              text-gray-500
+            ">
+              {subtitle}
+            </p>
+          </div>
+
+        </div>
 
         <button
           type="button"
-          onClick={() => onAddStep(routineType)}
-          className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm hover:bg-gray-200"
+          onClick={() =>
+            onAddStep(routineType)
+          }
+          className="
+            inline-flex
+            items-center
+            gap-1.5
+            px-3.5 py-2
+            rounded-xl
+            bg-violet-50
+            text-violet-700
+            text-sm
+            font-semibold
+            hover:bg-violet-100
+          "
         >
-          + Add Step
+          <Plus size={16} />
+          Add Step
         </button>
 
       </div>
@@ -768,14 +1825,50 @@ function EditableRoutineSection({
           steps.map((step, index) => (
             <div
               key={index}
-              className="p-4 rounded-lg bg-gray-50 border border-gray-200"
+              className="
+                rounded-2xl
+                bg-slate-50
+                border border-gray-100
+                p-5
+              "
             >
 
-              <div className="flex justify-between items-start mb-3">
+              <div className="
+                flex
+                items-center
+                justify-between
+                mb-4
+              ">
 
-                <span className="text-xs font-bold text-gray-500">
-                  STEP {index + 1}
-                </span>
+                <div className="
+                  flex
+                  items-center
+                  gap-2
+                ">
+
+                  <span className="
+                    w-8 h-8
+                    rounded-xl
+                    bg-violet-100
+                    text-violet-700
+                    flex items-center justify-center
+                    text-xs
+                    font-bold
+                  ">
+                    {index + 1}
+                  </span>
+
+                  <span className="
+                    text-xs
+                    font-bold
+                    uppercase
+                    tracking-wide
+                    text-gray-500
+                  ">
+                    Routine Step
+                  </span>
+
+                </div>
 
                 <button
                   type="button"
@@ -785,14 +1878,27 @@ function EditableRoutineSection({
                       index
                     )
                   }
-                  className="text-sm text-red-600 hover:text-red-800"
+                  className="
+                    inline-flex
+                    items-center
+                    gap-1
+                    text-xs
+                    font-semibold
+                    text-red-500
+                    hover:text-red-700
+                  "
                 >
+                  <Trash2 size={14} />
                   Remove
                 </button>
 
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="
+                grid
+                md:grid-cols-2
+                gap-4
+              ">
 
                 <Input
                   label="Category"
@@ -811,7 +1917,8 @@ function EditableRoutineSection({
                 <Input
                   label="Suggested Ingredient"
                   value={
-                    step.product_suggestion || ''
+                    step.product_suggestion ||
+                    ''
                   }
                   onChange={(value) =>
                     onStepChange(
@@ -826,9 +1933,15 @@ function EditableRoutineSection({
 
               </div>
 
-              <div className="mt-3">
+              <div className="mt-4">
 
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="
+                  block
+                  text-sm
+                  font-semibold
+                  text-gray-700
+                  mb-2
+                ">
                   Instruction
                 </label>
 
@@ -843,7 +1956,19 @@ function EditableRoutineSection({
                     )
                   }
                   rows={3}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  className="
+                    w-full
+                    rounded-2xl
+                    border border-gray-200
+                    bg-white
+                    px-4 py-3
+                    text-sm
+                    outline-none
+                    focus:border-violet-400
+                    focus:ring-4
+                    focus:ring-violet-100
+                    transition
+                  "
                   placeholder="Describe how to perform this step..."
                 />
 
@@ -852,9 +1977,21 @@ function EditableRoutineSection({
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500">
-            No steps. Click "+ Add Step" to add one.
-          </p>
+          <div className="
+            text-center
+            rounded-2xl
+            bg-gray-50
+            border border-dashed
+            border-gray-200
+            p-7
+          ">
+            <p className="
+              text-sm
+              text-gray-500
+            ">
+              No steps yet. Click "Add Step".
+            </p>
+          </div>
         )}
 
       </div>
@@ -877,7 +2014,13 @@ function Input({
   return (
     <div>
 
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="
+        block
+        text-sm
+        font-semibold
+        text-gray-700
+        mb-2
+      ">
         {label}
       </label>
 
@@ -888,76 +2031,21 @@ function Input({
           onChange(e.target.value)
         }
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+        className="
+          w-full
+          rounded-2xl
+          border border-gray-200
+          bg-white
+          px-4 py-3
+          text-sm
+          text-gray-800
+          outline-none
+          focus:border-violet-400
+          focus:ring-4
+          focus:ring-violet-100
+          transition
+        "
       />
-
-    </div>
-  )
-}
-
-
-/* ==========================================================
-   ROUTINE CARD
-========================================================== */
-
-function RoutineCard({
-  title,
-  steps = [],
-}) {
-  return (
-    <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-
-      <h2 className="font-semibold text-lg text-gray-800 mb-4">
-        {title}
-      </h2>
-
-      {steps.length > 0 ? (
-        <div className="space-y-3">
-
-          {steps.map((s, index) => (
-            <div
-              key={index}
-              className="p-3 rounded-lg bg-gray-50"
-            >
-
-              <div className="flex items-start gap-2">
-
-                <div className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-700 shrink-0">
-                  {s.step ?? index + 1}
-                </div>
-
-                <div>
-
-                  <h3 className="font-medium text-gray-800">
-                    {s.category}
-                  </h3>
-
-                  <p className="text-sm text-gray-600 mt-1">
-                    {s.instruction}
-                  </p>
-
-                  {s.product_suggestion && (
-                    <p className="text-xs text-gray-500 mt-2">
-                      Suggested ingredient:{' '}
-                      <span className="font-medium text-gray-700">
-                        {s.product_suggestion}
-                      </span>
-                    </p>
-                  )}
-
-                </div>
-
-              </div>
-
-            </div>
-          ))}
-
-        </div>
-      ) : (
-        <p className="text-sm text-gray-500">
-          No steps available.
-        </p>
-      )}
 
     </div>
   )
@@ -971,139 +2059,293 @@ function RoutineCard({
 function RoutineHistory({
   history = [],
 }) {
-  const [expanded, setExpanded] = useState(null)
+  const [expanded, setExpanded] =
+    useState(null)
 
   if (!history.length) {
     return null
   }
 
   return (
-    <div className="mt-8">
+    <div className="mt-10">
 
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-800">
-          Routine History
-        </h2>
+      <div className="mb-5">
 
-        <p className="text-sm text-gray-500 mt-1">
-          Previous personalized routines and assessment changes
-        </p>
+        <div className="flex items-center gap-3">
+
+          <div className="
+            w-11 h-11
+            rounded-2xl
+            bg-violet-50
+            flex items-center justify-center
+          ">
+            <Clock3
+              size={21}
+              className="text-violet-600"
+            />
+          </div>
+
+          <div>
+
+            <h2 className="
+              text-2xl
+              font-bold
+              text-gray-900
+            ">
+              Routine History
+            </h2>
+
+            <p className="
+              text-sm
+              text-gray-500
+              mt-1
+            ">
+              Previous personalized routines
+              and changes
+            </p>
+
+          </div>
+
+        </div>
+
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
 
         {history.map((item, index) => {
 
-          const isOpen = expanded === item.id
+          const key =
+            item.id ?? index
+
+          const isOpen =
+            expanded === key
 
           return (
             <div
-              key={item.id || index}
-              className="bg-white rounded-xl border border-gray-200 shadow-sm"
+              key={key}
+              className="
+                bg-white
+                rounded-3xl
+                border border-gray-100
+                shadow-sm
+                overflow-hidden
+              "
             >
 
               <button
                 type="button"
                 onClick={() =>
                   setExpanded(
-                    isOpen ? null : item.id
+                    isOpen
+                      ? null
+                      : key
                   )
                 }
-                className="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50"
+                className="
+                  w-full
+                  p-5
+                  text-left
+                  flex
+                  items-center
+                  justify-between
+                  gap-4
+                  hover:bg-gray-50
+                  transition
+                "
               >
 
-                <div>
+                <div className="min-w-0">
 
-                  <div className="font-semibold text-gray-800">
-                    Routine from{' '}
-                    {new Date(
-                      item.created_at
-                    ).toLocaleString()}
+                  <div className="
+                    flex
+                    items-center
+                    gap-2
+                    flex-wrap
+                  ">
+
+                    <span className="
+                      text-sm
+                      font-bold
+                      text-gray-900
+                    ">
+                      Routine from{' '}
+                      {item.created_at
+                        ? new Date(
+                            item.created_at
+                          ).toLocaleString()
+                        : 'Previous date'}
+                    </span>
+
+                    <span className="
+                      text-[11px]
+                      font-semibold
+                      px-2 py-1
+                      rounded-full
+                      bg-violet-50
+                      text-violet-700
+                    ">
+                      {capitalize(
+                        item.season ||
+                          'all'
+                      )}
+                    </span>
+
                   </div>
 
-                  <div className="text-sm text-gray-500 mt-1">
-                    Season: {item.season || 'all'}
-                    {' • '}
-                    Skin health score:{' '}
-                    {item.condition_score ?? 'N/A'}
-                  </div>
+                  <div className="
+                    flex
+                    items-center
+                    gap-3
+                    flex-wrap
+                    mt-2
+                  ">
 
-                  {item.change_summary && (
-                    <div className="text-sm text-gray-600 mt-2">
-                      {item.change_summary}
-                    </div>
-                  )}
+                    <span className="
+                      text-xs
+                      text-gray-500
+                    ">
+                      Skin health score:{' '}
+                      <strong className="text-gray-700">
+                        {item.condition_score ??
+                          'N/A'}
+                      </strong>
+                    </span>
 
-                </div>
-
-                <span className="text-gray-500 text-lg">
-                  {isOpen ? '▲' : '▼'}
-                </span>
-
-              </button>
-
-              {isOpen && (
-                <div className="border-t border-gray-100 p-4 space-y-4">
-
-                  <RoutineCard
-                    title="☀️ Morning"
-                    steps={item.morning_routine}
-                  />
-
-                  <RoutineCard
-                    title="🌙 Evening"
-                    steps={item.evening_routine}
-                  />
-
-                  <div className="bg-gray-50 rounded-lg p-4">
-
-                    <h3 className="font-semibold text-gray-800 mb-2">
-                      📅 Weekly Treatments
-                    </h3>
-
-                    {item.weekly_treatments?.length > 0 ? (
-                      <div className="space-y-2">
-
-                        {item.weekly_treatments.map(
-                          (t, i) => (
-                            <div
-                              key={i}
-                              className="text-sm"
-                            >
-                              <strong>
-                                {t.day}
-                              </strong>
-                              {' — '}
-                              {t.treatment}
-
-                              {t.purpose && (
-                                <span className="text-gray-500">
-                                  {' '}
-                                  ({t.purpose})
-                                </span>
-                              )}
-                            </div>
-                          )
-                        )}
-
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        No weekly treatments.
-                      </p>
+                    {item.change_summary && (
+                      <span className="
+                        text-xs
+                        text-gray-400
+                      ">
+                        {item.change_summary}
+                      </span>
                     )}
 
                   </div>
 
-                  {item.notes && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="font-semibold text-gray-800 mb-2">
-                        📝 Notes
-                      </h3>
+                </div>
 
-                      <p className="text-sm text-gray-600 whitespace-pre-line">
-                        {item.notes}
-                      </p>
+                <div className="
+                  w-9 h-9
+                  rounded-xl
+                  bg-gray-100
+                  flex items-center justify-center
+                  shrink-0
+                ">
+                  {isOpen ? (
+                    <ChevronUp
+                      size={18}
+                      className="text-gray-600"
+                    />
+                  ) : (
+                    <ChevronDown
+                      size={18}
+                      className="text-gray-600"
+                    />
+                  )}
+                </div>
+
+              </button>
+
+              {isOpen && (
+                <div className="
+                  border-t border-gray-100
+                  p-5
+                  bg-gray-50/50
+                  space-y-5
+                ">
+
+                  <div className="
+                    grid
+                    lg:grid-cols-2
+                    gap-5
+                  ">
+
+                    <RoutineCard
+                      title="Morning Routine"
+                      subtitle="Previous morning routine"
+                      icon={
+                        <Sun
+                          size={21}
+                          className="text-orange-500"
+                        />
+                      }
+                      iconBg="bg-orange-50"
+                      steps={
+                        item.morning_routine ||
+                        []
+                      }
+                    />
+
+                    <RoutineCard
+                      title="Evening Routine"
+                      subtitle="Previous evening routine"
+                      icon={
+                        <Moon
+                          size={21}
+                          className="text-indigo-500"
+                        />
+                      }
+                      iconBg="bg-indigo-50"
+                      steps={
+                        item.evening_routine ||
+                        []
+                      }
+                    />
+
+                  </div>
+
+                  <WeeklyTreatments
+                    treatments={
+                      item.weekly_treatments ||
+                      []
+                    }
+                  />
+
+                  {item.notes && (
+                    <div className="
+                      bg-white
+                      rounded-3xl
+                      border border-gray-100
+                      p-5
+                    ">
+
+                      <div className="
+                        flex
+                        gap-3
+                      ">
+
+                        <FileText
+                          size={20}
+                          className="
+                            text-violet-600
+                            mt-0.5
+                            shrink-0
+                          "
+                        />
+
+                        <div>
+
+                          <h3 className="
+                            font-bold
+                            text-gray-900
+                          ">
+                            Notes
+                          </h3>
+
+                          <p className="
+                            text-sm
+                            text-gray-600
+                            leading-6
+                            mt-1
+                            whitespace-pre-line
+                          ">
+                            {item.notes}
+                          </p>
+
+                        </div>
+
+                      </div>
+
                     </div>
                   )}
 
@@ -1117,5 +2359,19 @@ function RoutineHistory({
       </div>
 
     </div>
+  )
+}
+
+
+/* ==========================================================
+   CAPITALIZE
+========================================================== */
+
+function capitalize(value) {
+  if (!value) return ''
+
+  return (
+    value.charAt(0).toUpperCase() +
+    value.slice(1)
   )
 }

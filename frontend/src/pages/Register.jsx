@@ -37,9 +37,12 @@ export default function Register() {
           <option value="consultant">Skincare Consultant</option>
           <option value="dermatologist">Dermatologist</option>
         </select>
-        <button type="submit" className="w-full bg-primary-500 hover:bg-primary-600 text-white py-2 rounded-md">
-          Register
-        </button>
+        <button
+  type="submit"
+  className="w-full bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+>
+  Register →
+</button>
 
         <div className="flex items-center gap-3 my-4">
           <div className="flex-1 h-px bg-gray-200" />

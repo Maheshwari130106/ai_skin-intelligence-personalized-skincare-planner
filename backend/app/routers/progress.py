@@ -76,23 +76,42 @@ def log_progress(
     score_result = None
 
     if profile:
+
+    # ---------------------------------------------------------
+    # GET CONCERNS FROM LATEST ASSESSMENT
+    # SkinAssessment stores concerns as related SkinConcern rows
+    # ---------------------------------------------------------
+
+        if latest_assessment:
+            identified_concerns = [
+            concern.concern_name
+            for concern in latest_assessment.concerns
+        ]
+
+        concern_severity = {
+            concern.concern_name: concern.severity
+            for concern in latest_assessment.concerns
+        }
+
+    else:
+        # Fall back to the user's skin profile
+        identified_concerns = profile.skin_concerns or []
+
+        concern_severity = {
+            concern: "mild"
+            for concern in identified_concerns
+        }
+
+    
         score_result = compute_skin_health_score(
-            identified_concerns=(
-                latest_assessment.identified_concerns
-                if latest_assessment
-                else (profile.skin_concerns or [])
-            ),
-            concern_severity=(
-                latest_assessment.concern_severity
-                if latest_assessment
-                else {}
-            ),
-            lifestyle_habits=profile.lifestyle_habits or [],
-            sleep_quality=profile.sleep_quality,
-            sleep_hours=profile.sleep_hours or 7.0,
-            logs_last_14_days=recent_logs_dicts,
-            water_intake_liters=profile.water_intake_liters or 2.0,
-        )
+        identified_concerns=identified_concerns,
+        concern_severity=concern_severity,
+        lifestyle_habits=profile.lifestyle_habits or [],
+        sleep_quality=profile.sleep_quality,
+        sleep_hours=profile.sleep_hours or 7.0,
+        logs_last_14_days=recent_logs_dicts,
+        water_intake_liters=profile.water_intake_liters or 2.0,
+    )
 
     log = ProgressLog(
         user_id=current_user.id,

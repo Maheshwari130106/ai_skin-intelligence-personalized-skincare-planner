@@ -10,6 +10,7 @@ import {
   TrendingUp,
   RefreshCw,
   CalendarCheck,
+  Package,
 } from "lucide-react";
 
 import client from "../api/client";
@@ -17,10 +18,12 @@ import client from "../api/client";
 export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // =========================================================
-  // LOAD REAL NOTIFICATIONS
+  // LOAD NOTIFICATIONS
   // =========================================================
 
   const loadNotifications = async () => {
@@ -50,6 +53,42 @@ export default function Notifications() {
   useEffect(() => {
     loadNotifications();
   }, []);
+
+  // =========================================================
+  // GENERATE TEST NOTIFICATIONS
+  // =========================================================
+
+  const generateTestNotifications = async () => {
+    try {
+      setGenerating(true);
+      setError("");
+      setSuccess("");
+
+      await client.post("/notifications/generate-test");
+
+      setSuccess(
+        "Test notifications generated successfully."
+      );
+
+      await loadNotifications();
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      console.error(
+        "Generate notification error:",
+        err
+      );
+
+      setError(
+        err.response?.data?.detail ||
+          "Failed to generate test notifications."
+      );
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   // =========================================================
   // MARK ONE AS READ
@@ -89,24 +128,14 @@ export default function Notifications() {
   // =========================================================
 
   const markAllAsRead = async () => {
-    const unreadNotifications = notifications.filter(
-      (item) => !item.is_read
-    );
-
-    if (unreadNotifications.length === 0) {
+    if (unreadCount === 0) {
       return;
     }
 
     try {
       setError("");
 
-      await Promise.all(
-        unreadNotifications.map((item) =>
-          client.post(
-            `/notifications/${item.id}/read`
-          )
-        )
-      );
+      await client.post("/notifications/read-all");
 
       setNotifications((current) =>
         current.map((item) => ({
@@ -175,9 +204,17 @@ export default function Notifications() {
 
       case "replenishment":
         return (
-          <RefreshCw
+          <Package
             size={22}
             className="text-orange-600"
+          />
+        );
+
+      case "platform":
+        return (
+          <Bell
+            size={22}
+            className="text-blue-600"
           />
         );
 
@@ -215,6 +252,9 @@ export default function Notifications() {
       case "replenishment":
         return "Product Reminder";
 
+      case "platform":
+        return "Platform Notification";
+
       default:
         return "Notification";
     }
@@ -223,22 +263,23 @@ export default function Notifications() {
   // =========================================================
   // DATE FORMAT
   // =========================================================
+const formatDate = (dateString) => {
+  if (!dateString) {
+    return "";
+  }
 
-  const formatDate = (dateString) => {
-    if (!dateString) {
-      return "";
-    }
+  const date = new Date(dateString);
 
-    const date = new Date(dateString);
-
-    return date.toLocaleString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  return date.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
 
   // =========================================================
   // UNREAD COUNT
@@ -268,27 +309,68 @@ export default function Notifications() {
 
           <p className="text-gray-500 mt-2">
             Stay updated with your appointments,
-            skincare progress, and important updates.
+            skincare progress, reminders, and important
+            platform updates.
           </p>
         </div>
 
-        {/* ONLY REFRESH BUTTON */}
-        <button
-          type="button"
-          onClick={loadNotifications}
-          disabled={loading}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition"
-        >
-          <RefreshCw
-            size={17}
-            className={
-              loading ? "animate-spin" : ""
-            }
-          />
+        <div className="flex flex-wrap items-center gap-3">
 
-          Refresh
-        </button>
+          {/* GENERATE TEST BUTTON */}
+
+          <button
+            type="button"
+            onClick={generateTestNotifications}
+            disabled={generating}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 disabled:opacity-60 transition"
+          >
+            <Sparkles
+              size={17}
+              className={
+                generating
+                  ? "animate-pulse"
+                  : ""
+              }
+            />
+
+            {generating
+              ? "Generating..."
+              : "Generate Test Notifications"}
+          </button>
+
+          {/* REFRESH BUTTON */}
+
+          <button
+            type="button"
+            onClick={loadNotifications}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition"
+          >
+            <RefreshCw
+              size={17}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+
+            Refresh
+          </button>
+
+        </div>
+
       </div>
+
+      {/* =====================================================
+          SUCCESS
+      ====================================================== */}
+
+      {success && (
+        <div className="mb-5 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
+          {success}
+        </div>
+      )}
 
       {/* =====================================================
           ERROR
@@ -377,124 +459,143 @@ export default function Notifications() {
           EMPTY STATE
       ====================================================== */}
 
-      {!loading && notifications.length === 0 && (
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-12 text-center">
+      {!loading &&
+        notifications.length === 0 && (
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-12 text-center">
 
-          <div className="w-16 h-16 mx-auto rounded-full bg-violet-100 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-violet-100 flex items-center justify-center mb-4">
 
-            <Bell
-              size={28}
-              className="text-violet-600"
-            />
+              <Bell
+                size={28}
+                className="text-violet-600"
+              />
+
+            </div>
+
+            <h2 className="text-lg font-semibold text-gray-800">
+              No notifications yet
+            </h2>
+
+            <p className="text-sm text-gray-500 mt-2">
+              Your appointment updates, reminders,
+              progress alerts, and platform notifications
+              will appear here.
+            </p>
+
+            <button
+              type="button"
+              onClick={generateTestNotifications}
+              disabled={generating}
+              className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-60 transition"
+            >
+              <Sparkles size={17} />
+
+              Generate Sample Notifications
+            </button>
 
           </div>
-
-          <h2 className="text-lg font-semibold text-gray-800">
-            No notifications yet
-          </h2>
-
-          <p className="text-sm text-gray-500 mt-2">
-            Your appointment updates and important
-            skincare notifications will appear here.
-          </p>
-
-        </div>
-      )}
+        )}
 
       {/* =====================================================
           NOTIFICATION LIST
       ====================================================== */}
 
-      {!loading && notifications.length > 0 && (
-        <div className="space-y-4">
+      {!loading &&
+        notifications.length > 0 && (
+          <div className="space-y-4">
 
-          {notifications.map((notification) => (
+            {notifications.map((notification) => (
 
-            <div
-              key={notification.id}
-              className={`bg-white rounded-2xl border shadow-sm p-5 transition ${
-                notification.is_read
-                  ? "border-gray-100"
-                  : "border-violet-200 bg-violet-50/30"
-              }`}
-            >
+              <div
+                key={notification.id}
+                className={`bg-white rounded-2xl border shadow-sm p-5 transition ${
+                  notification.is_read
+                    ? "border-gray-100"
+                    : "border-violet-200 bg-violet-50/30"
+                }`}
+              >
 
-              <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4">
 
-                {/* ICON */}
+                  {/* ICON */}
 
-                <div className="w-11 h-11 shrink-0 rounded-xl bg-gray-50 flex items-center justify-center">
+                  <div className="w-11 h-11 shrink-0 rounded-xl bg-gray-50 flex items-center justify-center">
 
-                  {getIcon(notification.type)}
-
-                </div>
-
-                {/* CONTENT */}
-
-                <div className="flex-1 min-w-0">
-
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-
-                    <div className="flex items-center gap-2">
-
-                      <h3 className="font-semibold text-gray-800">
-                        {getTypeLabel(notification)}
-                      </h3>
-
-                      {!notification.is_read && (
-                        <span className="w-2 h-2 rounded-full bg-violet-600" />
-                      )}
-
-                    </div>
-
-                    <span className="text-xs text-gray-400">
-                      {formatDate(
-                        notification.created_at
-                      )}
-                    </span>
+                    {getIcon(
+                      notification.type
+                    )}
 
                   </div>
 
-                  {/* REAL DATABASE MESSAGE */}
+                  {/* CONTENT */}
 
-                  <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                    {notification.message}
-                  </p>
+                  <div className="flex-1 min-w-0">
 
-                  {/* MARK AS READ */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 
-                  {!notification.is_read && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        markAsRead(
-                          notification.id
-                        )
-                      }
-                      className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-violet-600 hover:text-violet-800"
-                    >
-                      <Check size={16} />
+                      <div className="flex items-center gap-2">
 
-                      Mark as read
-                    </button>
-                  )}
+                        <h3 className="font-semibold text-gray-800">
+                          {getTypeLabel(
+                            notification
+                          )}
+                        </h3>
 
-                  {notification.is_read && (
-                    <p className="text-xs text-gray-400 mt-4">
-                      Read
+                        {!notification.is_read && (
+                          <span className="w-2 h-2 rounded-full bg-violet-600" />
+                        )}
+
+                      </div>
+
+                      <span className="text-xs text-gray-400">
+                        {formatDate(notification.created_at)}
+
+                      </span>
+
+                    </div>
+
+                    {/* MESSAGE */}
+
+                    <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                      {notification.message}
                     </p>
-                  )}
+
+                    {/* MARK AS READ */}
+
+                    {!notification.is_read && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          markAsRead(
+                            notification.id
+                          )
+                        }
+                        className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-violet-600 hover:text-violet-800"
+                      >
+                        <Check size={16} />
+
+                        Mark as read
+                      </button>
+                    )}
+
+                    {/* READ */}
+
+                    {notification.is_read && (
+                      <p className="text-xs text-gray-400 mt-4">
+                        Read
+                      </p>
+                    )}
+
+                  </div>
 
                 </div>
 
               </div>
 
-            </div>
+            ))}
 
-          ))}
-
-        </div>
-      )}
+          </div>
+        )}
 
     </div>
   );
