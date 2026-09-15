@@ -17,7 +17,7 @@ alembic==1.13.2
 authlib==1.7.2
 itsdangerous==2.2.0
 APScheduler==3.11.3
-
+pytz==2024.1
 
 # --- Dev / testing ---
 pytest==8.2.2

@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.user import User
@@ -152,4 +152,46 @@ def mark_all_read(
     return {
         "ok": True,
         "updated": len(notifications),
+    }
+# =========================================================
+# EMAIL NOTIFICATION SETTINGS
+# =========================================================
+
+@router.get("/email-settings")
+def get_email_notification_settings(
+    current_user: User = Depends(get_current_user),
+):
+    return {
+        "email_notifications_enabled": (
+            current_user.email_notifications_enabled
+        )
+    }
+
+
+# =========================================================
+# UPDATE EMAIL NOTIFICATION SETTINGS
+# =========================================================
+
+@router.post("/email-settings")
+def update_email_notification_settings(
+    enabled: bool = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+
+    current_user.email_notifications_enabled = enabled
+
+    db.commit()
+    db.refresh(current_user)
+
+    return {
+        "ok": True,
+        "email_notifications_enabled": (
+            current_user.email_notifications_enabled
+        ),
+        "message": (
+            "Email reminders enabled."
+            if enabled
+            else "Email reminders disabled."
+        ),
     }

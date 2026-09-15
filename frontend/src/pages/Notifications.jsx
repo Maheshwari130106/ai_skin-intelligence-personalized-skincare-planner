@@ -11,6 +11,7 @@ import {
   RefreshCw,
   CalendarCheck,
   Package,
+  Mail,
 } from "lucide-react";
 
 import client from "../api/client";
@@ -21,6 +22,8 @@ export default function Notifications() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [updatingEmail, setUpdatingEmail] = useState(false);
 
   // =========================================================
   // LOAD NOTIFICATIONS
@@ -45,14 +48,71 @@ export default function Notifications() {
       setLoading(false);
     }
   };
+  const loadEmailSettings = async () => {
+  try {
+    const response = await client.get(
+      "/notifications/email-settings"
+    );
+
+    setEmailEnabled(
+      response.data?.email_notifications_enabled || false
+    );
+  } catch (err) {
+    console.error(
+      "Email settings loading error:",
+      err
+    );
+  }
+};
+const toggleEmailNotifications = async () => {
+  try {
+    setUpdatingEmail(true);
+    setError("");
+    setSuccess("");
+
+    const newValue = !emailEnabled;
+
+    const response = await client.post(
+      `/notifications/email-settings?enabled=${newValue}`
+    );
+
+    setEmailEnabled(
+      response.data?.email_notifications_enabled || false
+    );
+
+    setSuccess(
+      newValue
+        ? "Email reminders enabled. You will receive scheduled skincare emails at the configured IST times."
+        : "Email reminders disabled."
+    );
+
+    setTimeout(() => {
+      setSuccess("");
+    }, 4000);
+
+  } catch (err) {
+    console.error(
+      "Email notification setting error:",
+      err
+    );
+
+    setError(
+      err.response?.data?.detail ||
+      "Failed to update email notification setting."
+    );
+  } finally {
+    setUpdatingEmail(false);
+  }
+};
 
   // =========================================================
   // INITIAL LOAD
   // =========================================================
 
   useEffect(() => {
-    loadNotifications();
-  }, []);
+  loadNotifications();
+  loadEmailSettings();
+}, []);
 
   // =========================================================
   // GENERATE TEST NOTIFICATIONS
@@ -289,6 +349,8 @@ const formatDate = (dateString) => {
     (item) => !item.is_read
   ).length;
 
+
+
   // =========================================================
   // RENDER
   // =========================================================
@@ -315,6 +377,32 @@ const formatDate = (dateString) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* EMAIL REMINDER TOGGLE */}
+
+<button
+  type="button"
+  onClick={toggleEmailNotifications}
+  disabled={updatingEmail}
+  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition ${
+    emailEnabled
+      ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+      : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+  }`}
+>
+  <span
+    className={`w-2.5 h-2.5 rounded-full ${
+      emailEnabled
+        ? "bg-green-500"
+        : "bg-gray-400"
+    }`}
+  />
+
+  {updatingEmail
+    ? "Updating..."
+    : emailEnabled
+    ? "Email Reminders ON"
+    : "Email Reminders OFF"}
+</button>
 
           {/* GENERATE TEST BUTTON */}
 

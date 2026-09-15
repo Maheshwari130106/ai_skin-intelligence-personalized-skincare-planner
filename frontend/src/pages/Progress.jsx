@@ -22,7 +22,6 @@ ChartJS.register(
   Filler
 )
 
-
 export default function Progress() {
   const [history, setHistory] = useState([])
   const [photos, setPhotos] = useState([])
@@ -35,12 +34,10 @@ export default function Progress() {
 
   const [uploadingBefore, setUploadingBefore] = useState(false)
   const [uploadingCurrent, setUploadingCurrent] = useState(false)
-
   const [savingLog, setSavingLog] = useState(false)
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
 
   // =========================================================
   // LOAD DATA
@@ -67,74 +64,67 @@ export default function Progress() {
     }
   }
 
-
   useEffect(() => {
-  load()
-}, [])
+    load()
+  }, [])
 
-// =========================================================
-// DOWNLOAD PROFESSIONAL REPORT
-// =========================================================
+  // =========================================================
+  // DOWNLOAD WEEKLY / MONTHLY PDF
+  // =========================================================
 
-const downloadReport = async (type) => {
-  try {
-    setError('')
-    setSuccess('')
+  const downloadReport = async (type) => {
+    try {
+      setError('')
+      setSuccess('')
 
-    const response = await client.get(
-      `/reports/${type}/pdf`,
-      {
-        responseType: 'blob',
-      }
-    )
+      const response = await client.get(
+        `/reports/${type}/pdf`,
+        {
+          responseType: 'blob',
+        }
+      )
 
-    const blob = new Blob(
-      [response.data],
-      {
-        type: 'application/pdf',
-      }
-    )
+      const blob = new Blob(
+        [response.data],
+        {
+          type: 'application/pdf',
+        }
+      )
 
-    const url =
-      window.URL.createObjectURL(blob)
+      const url = window.URL.createObjectURL(blob)
 
-    const link =
-      document.createElement('a')
+      const link = document.createElement('a')
 
-    link.href = url
+      link.href = url
 
-    link.download =
-      type === 'weekly'
-        ? 'skiniq_weekly_skin_health_report.pdf'
-        : 'skiniq_monthly_skin_health_report.pdf'
+      link.download =
+        type === 'weekly'
+          ? 'skiniq_weekly_skin_health_report.pdf'
+          : 'skiniq_monthly_skin_health_report.pdf'
 
-    document.body.appendChild(link)
+      document.body.appendChild(link)
 
-    link.click()
+      link.click()
 
-    link.remove()
+      link.remove()
 
-    window.URL.revokeObjectURL(url)
+      window.URL.revokeObjectURL(url)
 
-    setSuccess(
-      `${type === 'weekly' ? 'Weekly' : 'Monthly'} professional report downloaded successfully.`
-    )
+      setSuccess(
+        `${type === 'weekly' ? 'Weekly' : 'Monthly'} professional report downloaded successfully.`
+      )
+    } catch (err) {
+      console.error(
+        'Report download error:',
+        err
+      )
 
-  } catch (err) {
-
-    console.error(
-      'Report download error:',
-      err
-    )
-
-    setError(
-      err.response?.data?.detail ||
-      'Failed to download the report.'
-    )
+      setError(
+        err.response?.data?.detail ||
+        'Failed to download the report.'
+      )
+    }
   }
-}
-
-
 
   // =========================================================
   // PHOTO ARRAYS
@@ -170,10 +160,8 @@ const downloadReport = async (type) => {
     [photos]
   )
 
-
   const beforePhoto = beforePhotos[0]
   const currentPhoto = currentPhotos[0]
-
 
   // =========================================================
   // IMAGE URL
@@ -196,7 +184,6 @@ const downloadReport = async (type) => {
 
     return `${serverBase}${photoUrl}`
   }
-
 
   // =========================================================
   // PHOTO UPLOAD
@@ -253,25 +240,21 @@ const downloadReport = async (type) => {
       setSuccess(
         `${type === 'before' ? 'Before' : 'Current'} photo analyzed successfully.`
       )
-
     } catch (err) {
       console.error(
         'Photo upload error:',
         err
       )
 
-      const message =
+      setError(
         err.response?.data?.detail ||
         `Failed to analyze ${type} photo.`
-
-      setError(message)
-
+      )
     } finally {
       setUploadingBefore(false)
       setUploadingCurrent(false)
     }
   }
-
 
   const handlePhotoSelect = (
     event,
@@ -290,9 +273,8 @@ const downloadReport = async (type) => {
     event.target.value = ''
   }
 
-
   // =========================================================
-  // BEFORE / CURRENT SCORE
+  // SCORES
   // =========================================================
 
   const beforeScore =
@@ -302,25 +284,12 @@ const downloadReport = async (type) => {
         )
       : null
 
-
   const currentScore =
     currentPhoto?.skin_health_score != null
       ? Number(
           currentPhoto.skin_health_score
         )
       : null
-
-
-  const photoImprovement =
-    beforeScore != null &&
-    currentScore != null
-      ? currentScore - beforeScore
-      : null
-
-
-  // =========================================================
-  // CURRENT DAILY SCORE
-  // =========================================================
 
   const latestHistoryScore =
     history.length > 0 &&
@@ -330,9 +299,210 @@ const downloadReport = async (type) => {
         )
       : null
 
+  const overviewScore =
+    currentScore ??
+    latestHistoryScore ??
+    null
+
+  const photoImprovement =
+    beforeScore != null &&
+    currentScore != null
+      ? currentScore - beforeScore
+      : null
+
+  const previousHistoryScore =
+    history.length > 1 &&
+    history[1]?.skin_health_score != null
+      ? Number(
+          history[1].skin_health_score
+        )
+      : null
+
+  const scoreChange =
+    overviewScore != null &&
+    previousHistoryScore != null
+      ? overviewScore -
+        previousHistoryScore
+      : photoImprovement
 
   // =========================================================
-  // DAILY PROGRESS LOG
+  // ROUTINE ADHERENCE
+  // =========================================================
+
+  const routineLogs =
+    history.filter(
+      (item) =>
+        item.routine_followed_morning ||
+        item.routine_followed_evening
+    )
+
+  const routineAdherence =
+    history.length > 0
+      ? Math.round(
+          (
+            routineLogs.length /
+            history.length
+          ) * 100
+        )
+      : 0
+
+  // =========================================================
+// CHRONOLOGICAL HISTORY
+// =========================================================
+
+// Keep the original history for Progress History.
+// Sort newest first.
+const sortedHistory = [...history].sort((a, b) => {
+  const dateA = new Date(
+    a.log_date || a.created_at || 0
+  )
+
+  const dateB = new Date(
+    b.log_date || b.created_at || 0
+  )
+
+  return dateB - dateA
+})
+
+// Only records that actually contain a skin-health score
+// are used in the trend chart.
+const scoredHistory = sortedHistory.filter(
+  (item) =>
+    item.skin_health_score !== null &&
+    item.skin_health_score !== undefined &&
+    !Number.isNaN(Number(item.skin_health_score))
+)
+
+// Chart needs oldest → newest
+const chronological = [...scoredHistory].reverse()
+
+  // =========================================================
+  // CHART DATA
+  // =========================================================
+
+  const chartData = {
+  labels: chronological.map((item) =>
+    new Date(
+      item.log_date || item.created_at
+    ).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    })
+  ),
+
+  datasets: [
+    {
+      label: 'Skin Health Score',
+
+      data: chronological.map((item) =>
+        Number(item.skin_health_score)
+      ),
+
+      borderColor: '#7c3aed',
+
+      backgroundColor:
+        'rgba(124, 58, 237, 0.10)',
+
+      fill: true,
+
+      tension: 0.3,
+
+      pointRadius: 5,
+
+      pointHoverRadius: 7,
+
+      pointBorderWidth: 2,
+
+      pointBackgroundColor: '#ffffff',
+
+      pointBorderColor: '#7c3aed',
+    },
+  ],
+}
+
+  const chartOptions = {
+  responsive: true,
+
+  maintainAspectRatio: false,
+
+  interaction: {
+    mode: 'index',
+    intersect: false,
+  },
+
+  plugins: {
+    legend: {
+      display: false,
+    },
+
+    tooltip: {
+      callbacks: {
+        title: (items) => {
+          if (!items.length) return ''
+
+          return items[0].label
+        },
+
+        label: (context) => {
+          const value = context.raw
+
+          return value != null
+            ? ` Skin Health Score: ${Number(value).toFixed(1)}/100`
+            : ''
+        },
+      },
+    },
+  },
+
+  scales: {
+    x: {
+      ticks: {
+        autoSkip: false,
+        maxRotation: 0,
+      },
+    },
+
+    y: {
+      min: 0,
+      max: 100,
+
+      title: {
+        display: true,
+        text: 'Score',
+      },
+
+      ticks: {
+        stepSize: 10,
+      },
+    },
+  },
+}
+
+  // =========================================================
+  // AI INSIGHT
+  // =========================================================
+
+  let progressInsight =
+    'Keep recording your progress to receive personalized skin-health insights.'
+
+  if (photoImprovement !== null) {
+    if (photoImprovement > 5) {
+      progressInsight =
+        'Your AI skin-health score has improved significantly between the Before and Current photos. Continue following your skincare routine consistently.'
+    } else if (photoImprovement > 0) {
+      progressInsight =
+        'Your AI skin-health score shows improvement. Continue your skincare routine and keep tracking your progress.'
+    } else if (photoImprovement < 0) {
+      progressInsight =
+        'Your Current photo has a lower AI skin-health score than your Before photo. Continue monitoring your routine and skin changes.'
+    } else {
+      progressInsight =
+        'Your AI skin-health score is currently stable. Continue your routine and keep tracking your progress.'
+    }
+  }
+
+  // =========================================================
+  // DAILY PROGRESS
   // =========================================================
 
   const submit = async (event) => {
@@ -348,15 +518,9 @@ const downloadReport = async (type) => {
     try {
       setSavingLog(true)
 
-      const response =
-        await client.post(
-          '/progress/log',
-          form
-        )
-
-      console.log(
-        'Progress log saved:',
-        response.data
+      await client.post(
+        '/progress/log',
+        form
       )
 
       setForm({
@@ -368,9 +532,8 @@ const downloadReport = async (type) => {
       await load()
 
       setSuccess(
-        'Today’s progress was saved successfully.'
+        "Today's progress was saved successfully."
       )
-
     } catch (err) {
       console.error(
         'Progress log error:',
@@ -382,257 +545,204 @@ const downloadReport = async (type) => {
         err.response?.data?.message ||
         'Failed to save progress log. Please try again.'
       )
-
     } finally {
       setSavingLog(false)
     }
   }
-
-
-  // =========================================================
-  // CHRONOLOGICAL HISTORY
-  // =========================================================
-
-  const chronological =
-    [...history].reverse()
-
-
-  // =========================================================
-  // CHART
-  // =========================================================
-
-  const chartData = {
-    labels:
-      chronological.map(
-        (item) =>
-          new Date(
-            item.log_date
-          ).toLocaleDateString(
-            undefined,
-            {
-              month: 'short',
-              day: 'numeric',
-            }
-          )
-      ),
-
-    datasets: [
-      {
-        label:
-          'Skin Health Score',
-
-        data:
-          chronological.map(
-            (item) =>
-              item.skin_health_score
-        ),
-
-        borderColor:
-          '#d97757',
-
-        backgroundColor:
-          'rgba(217, 119, 87, 0.12)',
-
-        fill: true,
-
-        tension: 0.3,
-
-        pointRadius: 5,
-
-        pointHoverRadius: 7,
-      },
-    ],
-  }
-
-
-  const chartOptions = {
-    responsive: true,
-
-    maintainAspectRatio: false,
-
-    plugins: {
-      legend: {
-        display: false,
-      },
-
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const value =
-              context.raw
-
-            return value != null
-              ? ` Skin Health: ${Number(
-                  value
-                ).toFixed(1)}/100`
-              : ' No score'
-          },
-        },
-      },
-    },
-
-    scales: {
-      y: {
-        min: 0,
-        max: 100,
-
-        ticks: {
-          stepSize: 10,
-        },
-      },
-    },
-  }
-
-
-  // =========================================================
-  // OVERVIEW SCORE
-  // =========================================================
-
-  const overviewScore =
-    currentScore ??
-    latestHistoryScore ??
-    null
-
-
-  const previousHistoryScore =
-    history.length > 1 &&
-    history[1]?.skin_health_score != null
-      ? Number(
-          history[1].skin_health_score
-        )
-      : null
-
-
-  const scoreChange =
-    overviewScore != null &&
-    previousHistoryScore != null
-      ? overviewScore -
-        previousHistoryScore
-      : photoImprovement
-
-
-  // =========================================================
-  // ROUTINE ADHERENCE
-  // =========================================================
-
-  const routineLogs =
-    history.filter(
-      (item) =>
-        item.routine_followed_morning ||
-        item.routine_followed_evening
-    )
-
-
-  const routineAdherence =
-    history.length > 0
-      ? Math.round(
-          (
-            routineLogs.length /
-            history.length
-          ) * 100
-        )
-      : 0
-
-
-  // =========================================================
-  // AI INSIGHT
-  // =========================================================
-
-  let progressInsight =
-    'Keep recording your progress to receive personalized AI insights.'
-
-
-  if (photoImprovement !== null) {
-    if (photoImprovement > 5) {
-      progressInsight =
-        'Your AI skin-health score has improved significantly between the Before and Current photos. Continue following your skincare routine consistently.'
-    } else if (photoImprovement > 0) {
-      progressInsight =
-        'Your AI skin-health score shows improvement. Continue your skincare routine and keep tracking your progress.'
-    } else if (photoImprovement < 0) {
-      progressInsight =
-        'Your Current photo has a lower AI skin-health score than your Before photo. Review your recent skincare routine and continue monitoring changes.'
-    } else {
-      progressInsight =
-        'Your AI skin-health score is currently stable. Continue your routine and keep tracking your progress.'
-    }
-  }
-
 
   // =========================================================
   // RENDER
   // =========================================================
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
 
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
 
-      <div className="mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
 
-        <h1 className="text-2xl font-bold text-gray-800">
-          Progress Tracking
-        </h1>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Progress Tracking
+          </h1>
 
-        <p className="text-sm text-gray-500 mt-1">
-          Track your skin health, improvement
-          and skincare consistency over time.
-        </p>
+          <p className="text-sm text-gray-500 mt-1">
+            Track your skin health, improvement and skincare
+            consistency over time.
+          </p>
+        </div>
 
       </div>
 
-
-      {/* SUCCESS */}
+      {/* =====================================================
+          MESSAGES
+      ====================================================== */}
 
       {success && (
-        <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
+        <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
           {success}
         </div>
       )}
 
-
-      {/* ERROR */}
-
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
           {error}
         </div>
       )}
 
-
       {/* =====================================================
-          BEFORE & AFTER
+          1. SKIN HEALTH SUMMARY
       ====================================================== */}
 
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-8">
+      <section className="mb-6">
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+            📊
+          </div>
 
           <div>
-
-            <h2 className="font-semibold text-lg text-gray-800">
-              Before & After
+            <h2 className="text-lg font-semibold text-gray-900">
+              Skin Health Summary
             </h2>
 
-            <p className="text-sm text-gray-500 mt-1">
-              Compare your skin progress using
-              AI-analyzed skin images.
+            <p className="text-xs text-gray-500">
+              Your latest skin-health and routine information.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+          {/* CURRENT SCORE */}
+
+          <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-4">
+
+            <p className="text-xs text-gray-500">
+              Current Skin Health
+            </p>
+
+            <div className="flex items-end gap-1 mt-1">
+              <p className="text-3xl font-bold text-gray-900">
+                {overviewScore != null
+                  ? overviewScore.toFixed(1)
+                  : '—'}
+              </p>
+
+              <span className="text-xs text-gray-400 mb-1">
+                /100
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-400 mt-1">
+              Latest recorded AI score
             </p>
 
           </div>
 
+          {/* SCORE CHANGE */}
+
+          <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-4">
+
+            <p className="text-xs text-gray-500">
+              Score Change
+            </p>
+
+            <p
+              className={`text-3xl font-bold mt-1 ${
+                scoreChange == null
+                  ? 'text-gray-400'
+                  : scoreChange >= 0
+                    ? 'text-green-600'
+                    : 'text-red-600'
+              }`}
+            >
+              {scoreChange != null
+                ? `${scoreChange >= 0 ? '+' : ''}${scoreChange.toFixed(1)}`
+                : '—'}
+            </p>
+
+            <p className="text-xs text-gray-400 mt-1">
+              Compared with previous recorded score
+            </p>
+
+          </div>
+
+          {/* ROUTINE */}
+
+          <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-4">
+
+            <p className="text-xs text-gray-500">
+              Routine Adherence
+            </p>
+
+            <p className="text-3xl font-bold text-gray-900 mt-1">
+              {routineAdherence}%
+            </p>
+
+            <p className="text-xs text-gray-400 mt-1">
+              Based on recorded routine logs
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* AI INSIGHT */}
+
+        <div className="mt-3 bg-purple-50 border border-purple-100 rounded-xl p-4">
+
+          <div className="flex items-start gap-3">
+
+            <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shrink-0">
+              ✨
+            </div>
+
+            <div>
+              <p className="font-semibold text-gray-900 text-sm">
+                AI Progress Insight
+              </p>
+
+              <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                {progressInsight}
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          2. BEFORE / CURRENT PHOTOS
+      ====================================================== */}
+
+      <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-6">
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Before & Current Photos
+            </h2>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Compare your skin progress using AI-analyzed images.
+            </p>
+          </div>
 
           {photoImprovement !== null && (
             <div
-              className={`px-4 py-2 rounded-lg text-sm font-semibold ${
+              className={`px-3 py-2 rounded-lg text-sm font-semibold ${
                 photoImprovement >= 0
                   ? 'bg-green-50 text-green-700'
                   : 'bg-red-50 text-red-700'
               }`}
             >
-              {photoImprovement >= 0
-                ? '+'
-                : ''}
+              {photoImprovement >= 0 ? '+' : ''}
               {photoImprovement.toFixed(1)}
               {' '}points
             </div>
@@ -640,8 +750,7 @@ const downloadReport = async (type) => {
 
         </div>
 
-
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid md:grid-cols-2 gap-4">
 
           <PhotoCard
             title="Before"
@@ -655,7 +764,6 @@ const downloadReport = async (type) => {
             }
             getImageUrl={getImageUrl}
           />
-
 
           <PhotoCard
             title="Current"
@@ -672,220 +780,134 @@ const downloadReport = async (type) => {
 
         </div>
 
+      </section>
 
-        {photoImprovement !== null && (
-          <div className="mt-5 p-5 rounded-xl bg-gray-50 text-center">
+      {/* =====================================================
+    SKIN HEALTH TREND
+====================================================== */}
 
-            <p className="text-sm text-gray-500">
-              AI Skin Health Improvement
-            </p>
+<div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-8">
 
-            <p
-              className={`text-3xl font-bold mt-1 ${
-                photoImprovement >= 0
-                  ? 'text-green-600'
-                  : 'text-red-600'
-              }`}
-            >
-              {photoImprovement >= 0
-                ? '+'
-                : ''}
-              {photoImprovement.toFixed(1)}
-            </p>
+  <div className="flex items-center justify-between mb-4">
 
-            <p className="text-xs text-gray-500 mt-1">
-              Difference between the AI-analyzed
-              Before and Current image scores.
-            </p>
+    <div>
+      <h2 className="font-semibold text-lg text-gray-800">
+        Skin Health Trend
+      </h2>
 
-          </div>
-        )}
+      <p className="text-sm text-gray-500 mt-1">
+        Monitor how your recorded skin-health score changes over time.
+      </p>
+    </div>
+
+    <span className="text-xs font-medium text-purple-600 bg-purple-50 px-3 py-2 rounded-full">
+      Score / 100
+    </span>
+
+  </div>
+
+  {scoredHistory.length > 0 ? (
+
+    <div className="h-[360px]">
+
+      <Line
+        data={chartData}
+        options={chartOptions}
+      />
+
+    </div>
+
+  ) : (
+
+    <div className="h-[180px] flex items-center justify-center text-sm text-gray-500">
+      No skin-health scores have been recorded yet.
+    </div>
+
+  )}
+
+  {/* RECORDED SCORES */}
+
+  {scoredHistory.length > 0 && (
+
+    <div className="mt-6 pt-5 border-t border-gray-100">
+
+      <div className="flex items-center justify-between mb-3">
+
+        <h3 className="font-semibold text-gray-800">
+          Recorded Scores
+        </h3>
+
+        <span className="text-xs text-gray-400">
+          Latest entries
+        </span>
 
       </div>
 
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
 
-      {/* =====================================================
-          SKIN HEALTH OVERVIEW
-      ====================================================== */}
+        {scoredHistory.map((item) => (
 
-      <div className="mb-8">
+          <div
+            key={`score-${item.id}`}
+            className="bg-gray-50 border border-gray-100 rounded-lg p-3"
+          >
 
-        <h2 className="font-semibold text-lg text-gray-800 mb-4">
-          Skin Health Overview
-        </h2>
-
-
-        <div className="grid md:grid-cols-3 gap-4">
-
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-
-            <p className="text-sm text-gray-500">
-              Current Skin Health
+            <p className="text-xs text-gray-500">
+              {new Date(
+                item.log_date || item.created_at
+              ).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+              })}
             </p>
 
-            <p className="text-3xl font-bold text-gray-800 mt-2">
-              {overviewScore != null
-                ? overviewScore.toFixed(1)
-                : '—'}
+            <p className="text-xl font-bold text-purple-600 mt-1">
+              {Number(item.skin_health_score).toFixed(1)}
             </p>
 
-            <p className="text-xs text-gray-400 mt-1">
-              Out of 100
+            <p className="text-xs text-gray-400">
+              /100
             </p>
 
           </div>
 
-
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-
-            <p className="text-sm text-gray-500">
-              Score Change
-            </p>
-
-            <p
-              className={`text-3xl font-bold mt-2 ${
-                scoreChange === null
-                  ? 'text-gray-400'
-                  : scoreChange >= 0
-                    ? 'text-green-600'
-                    : 'text-red-600'
-              }`}
-            >
-              {scoreChange !== null
-                ? `${
-                    scoreChange >= 0
-                      ? '+'
-                      : ''
-                  }${scoreChange.toFixed(1)}`
-                : '—'}
-            </p>
-
-            <p className="text-xs text-gray-400 mt-1">
-              Compared with previous recorded score
-            </p>
-
-          </div>
-
-
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-
-            <p className="text-sm text-gray-500">
-              Routine Tracking
-            </p>
-
-            <p className="text-3xl font-bold text-gray-800 mt-2">
-              {routineAdherence}%
-            </p>
-
-            <p className="text-xs text-gray-400 mt-1">
-              Based on recorded routine logs
-            </p>
-
-          </div>
-
-        </div>
+        ))}
 
       </div>
 
+    </div>
+
+  )}
+
+</div>
+      
 
       {/* =====================================================
-          AI PROGRESS INSIGHT
-      ====================================================== */}
-
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-8">
-
-        <div className="flex items-start gap-3">
-
-          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-lg shrink-0">
-            ✨
-          </div>
-
-          <div>
-
-            <h2 className="font-semibold text-gray-800">
-              AI Progress Insight
-            </h2>
-
-            <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-              {progressInsight}
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      {/* =====================================================
-          SKIN HEALTH TREND
-      ====================================================== */}
-
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-8">
-
-        <div className="mb-4">
-
-          <h2 className="font-semibold text-lg text-gray-800">
-            Skin Health Trend
-          </h2>
-
-          <p className="text-sm text-gray-500 mt-1">
-            Monitor how your recorded skin-health
-            score changes over time.
-          </p>
-
-        </div>
-
-
-        {chronological.length > 1 ? (
-
-          <div className="h-[320px]">
-
-            <Line
-              data={chartData}
-              options={chartOptions}
-            />
-
-          </div>
-
-        ) : (
-
-          <div className="h-[180px] flex items-center justify-center text-sm text-gray-500">
-            Continue recording your progress to see
-            your skin-health trend here.
-          </div>
-
-        )}
-
-      </div>
-
-
-      {/* =====================================================
-          DAILY ROUTINE
+          4. DAILY ROUTINE TRACKING
       ====================================================== */}
 
       <form
         onSubmit={submit}
-        className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-8"
+        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-6"
       >
 
         <div className="mb-4">
 
-          <h2 className="font-semibold text-lg text-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900">
             Daily Routine Tracking
           </h2>
 
           <p className="text-sm text-gray-500 mt-1">
-            Record whether you followed your skincare
-            routine today.
+            Record whether you followed your skincare routine today.
           </p>
 
         </div>
 
+        <div className="grid md:grid-cols-2 gap-3 mb-3">
 
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
+          {/* MORNING */}
 
-          <label className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 border border-gray-100 cursor-pointer">
+          <label className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 border border-gray-100 cursor-pointer hover:border-purple-200">
 
             <input
               type="checkbox"
@@ -899,26 +921,24 @@ const downloadReport = async (type) => {
                     event.target.checked,
                 })
               }
-              className="w-4 h-4"
+              className="w-4 h-4 accent-purple-600"
             />
 
             <div>
-
               <p className="font-medium text-gray-800">
                 Morning Routine
               </p>
 
-              <p className="text-xs text-gray-500">
-                Cleansing, treatment,
-                moisturizer and sun protection.
+              <p className="text-xs text-gray-500 mt-0.5">
+                Cleansing, treatment, moisturizer and sun protection.
               </p>
-
             </div>
 
           </label>
 
+          {/* EVENING */}
 
-          <label className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 border border-gray-100 cursor-pointer">
+          <label className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 border border-gray-100 cursor-pointer hover:border-purple-200">
 
             <input
               type="checkbox"
@@ -932,30 +952,28 @@ const downloadReport = async (type) => {
                     event.target.checked,
                 })
               }
-              className="w-4 h-4"
+              className="w-4 h-4 accent-purple-600"
             />
 
             <div>
-
               <p className="font-medium text-gray-800">
                 Evening Routine
               </p>
 
-              <p className="text-xs text-gray-500">
-                Cleansing, treatment,
-                moisturizer and night care.
+              <p className="text-xs text-gray-500 mt-0.5">
+                Cleansing, treatment, moisturizer and night care.
               </p>
-
             </div>
 
           </label>
 
         </div>
 
-
         <textarea
           placeholder="Notes on how your skin feels today..."
-          value={form.skin_condition_note}
+          value={
+            form.skin_condition_note
+          }
           onChange={(event) =>
             setForm({
               ...form,
@@ -963,42 +981,233 @@ const downloadReport = async (type) => {
                 event.target.value,
             })
           }
-          className="w-full border border-gray-200 rounded-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+          maxLength={500}
           rows={3}
+          className="w-full border border-gray-200 rounded-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 resize-none"
         />
 
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
 
-        <button
-          type="submit"
-          disabled={savingLog}
-          className="mt-4 bg-primary-500 hover:bg-primary-600 disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-sm font-medium"
-        >
-          {savingLog
-            ? 'Saving...'
-            : "Save Today's Progress"}
-        </button>
+          <span className="text-xs text-gray-400">
+            {form.skin_condition_note.length}/500
+          </span>
+
+          <button
+            type="submit"
+            disabled={savingLog}
+            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-sm font-semibold"
+          >
+            {savingLog
+              ? 'Saving...'
+              : "Save Today's Progress"}
+          </button>
+
+        </div>
 
       </form>
 
-
       {/* =====================================================
-          PROGRESS HISTORY
+          5 & 6. REPORTS
       ====================================================== */}
 
-      <div className="mb-8">
+      <section className="mb-6">
 
-        <div className="mb-4">
+        <div className="mb-3">
 
-          <h2 className="font-semibold text-lg text-gray-800">
-            Progress History
+          <h2 className="text-lg font-semibold text-gray-900">
+            Reports & Insights
           </h2>
 
           <p className="text-sm text-gray-500 mt-1">
-            Your previous daily progress records.
+            Download your existing professional skincare reports as PDF.
           </p>
 
         </div>
 
+        <div className="grid md:grid-cols-2 gap-4">
+
+          {/* WEEKLY REPORT */}
+
+          <div className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
+
+            <div className="bg-blue-50 p-4">
+
+              <div className="flex items-center gap-3">
+
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                  📄
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    Weekly Professional Report
+                  </h3>
+
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Last 7 days of skin health and routine progress.
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="p-4">
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+
+                <div>
+                  <p className="text-xs text-gray-500">
+                    Current Score
+                  </p>
+
+                  <p className="font-bold text-gray-900 mt-1">
+                    {overviewScore != null
+                      ? `${overviewScore.toFixed(1)}/100`
+                      : '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-500">
+                    Routine
+                  </p>
+
+                  <p className="font-bold text-gray-900 mt-1">
+                    {routineAdherence}%
+                  </p>
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  downloadReport('weekly')
+                }
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-semibold"
+              >
+                <span>⬇</span>
+                Download Weekly PDF
+              </button>
+
+            </div>
+
+          </div>
+
+          {/* MONTHLY REPORT */}
+
+          <div className="bg-white rounded-xl border border-green-100 shadow-sm overflow-hidden">
+
+            <div className="bg-green-50 p-4">
+
+              <div className="flex items-center gap-3">
+
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                  📅
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    Monthly Professional Report
+                  </h3>
+
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Last 30 days of skin health and progress.
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="p-4">
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+
+                <div>
+                  <p className="text-xs text-gray-500">
+                    Current Score
+                  </p>
+
+                  <p className="font-bold text-gray-900 mt-1">
+                    {overviewScore != null
+                      ? `${overviewScore.toFixed(1)}/100`
+                      : '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-500">
+                    Improvement
+                  </p>
+
+                  <p
+                    className={`font-bold mt-1 ${
+                      photoImprovement == null
+                        ? 'text-gray-900'
+                        : photoImprovement >= 0
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                    }`}
+                  >
+                    {photoImprovement != null
+                      ? `${photoImprovement >= 0 ? '+' : ''}${photoImprovement.toFixed(1)}`
+                      : '—'}
+                  </p>
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  downloadReport('monthly')
+                }
+                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg text-sm font-semibold"
+              >
+                <span>⬇</span>
+                Download Monthly PDF
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="mt-3 px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-lg">
+
+          <p className="text-xs text-gray-500">
+            <span className="font-semibold text-gray-700">
+              Note:
+            </span>{' '}
+            Reports are generated from your recorded skincare information
+            and AI-assisted analysis. They are intended for progress
+            tracking and informational purposes, not medical diagnosis.
+          </p>
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          7. PROGRESS HISTORY
+      ====================================================== */}
+
+      <section className="mb-4">
+
+        <div className="mb-3">
+
+          <h2 className="text-lg font-semibold text-gray-900">
+            Progress History
+          </h2>
+
+          <p className="text-sm text-gray-500 mt-1">
+            Your previous daily progress records and skin-health scores.
+          </p>
+
+        </div>
 
         {history.length === 0 ? (
 
@@ -1008,38 +1217,43 @@ const downloadReport = async (type) => {
 
         ) : (
 
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
 
-            {history.map(
+            {sortedHistory.map(
               (item, index) => {
 
-                const previous =
-                  history[index + 1]
-                    ?.skin_health_score
+                const previousScoredItem =
+  sortedHistory
+    .slice(index + 1)
+    .find(
+      (entry) =>
+        entry.skin_health_score !== null &&
+        entry.skin_health_score !== undefined &&
+        !Number.isNaN(
+          Number(entry.skin_health_score)
+        )
+    )
 
-
-                const change =
-                  item.skin_health_score != null &&
-                  previous != null
-                    ? Number(
-                        item.skin_health_score
-                      ) -
-                      Number(previous)
-                    : null
-
+const change =
+  item.skin_health_score != null &&
+  previousScoredItem?.skin_health_score != null
+    ? Number(item.skin_health_score) -
+      Number(previousScoredItem.skin_health_score)
+    : null
 
                 return (
                   <div
                     key={item.id}
-                    className="p-4 border-b border-gray-100 last:border-b-0"
+                    className="px-4 py-3 border-b border-gray-100 last:border-b-0"
                   >
 
                     <div className="flex items-center justify-between gap-4">
 
-                      <div>
+                      {/* LEFT */}
 
-                        <p className="font-medium text-gray-800">
+                      <div className="min-w-0">
 
+                        <p className="font-medium text-gray-900 text-sm">
                           {new Date(
                             item.log_date
                           ).toLocaleDateString(
@@ -1050,19 +1264,9 @@ const downloadReport = async (type) => {
                               year: 'numeric',
                             }
                           )}
-
                         </p>
 
-
-                        <p className="text-sm text-gray-500 mt-1">
-
-                          {item.skin_condition_note ||
-                            'No note added.'}
-
-                        </p>
-
-
-                        <div className="flex flex-wrap gap-3 mt-2 text-xs">
+                        <div className="flex flex-wrap gap-3 mt-1.5 text-xs">
 
                           {item.routine_followed_morning && (
                             <span className="text-green-600">
@@ -1085,38 +1289,51 @@ const downloadReport = async (type) => {
 
                         </div>
 
-                      </div>
-
-
-                      <div className="text-right shrink-0">
-
-                        <p className="font-semibold text-gray-800">
-
-                          {item.skin_health_score != null
-                            ? `${Number(
-                                item.skin_health_score
-                              ).toFixed(1)}/100`
-                            : '—'}
-
-                        </p>
-
-
-                        {change !== null && (
-                          <p
-                            className={`text-xs mt-1 ${
-                              change >= 0
-                                ? 'text-green-600'
-                                : 'text-red-600'
-                            }`}
-                          >
-                            {change >= 0
-                              ? '+'
-                              : ''}
-                            {change.toFixed(1)}
+                        {item.skin_condition_note && (
+                          <p className="text-xs text-gray-500 mt-1 truncate max-w-[500px]">
+                            {item.skin_condition_note}
                           </p>
                         )}
 
                       </div>
+
+                      {/* RIGHT */}
+
+                      <div className="text-right shrink-0 min-w-[90px]">
+
+  {item.skin_health_score != null ? (
+
+    <>
+      <p className="text-lg font-bold text-purple-600">
+        {Number(item.skin_health_score).toFixed(1)}
+        <span className="text-xs font-medium text-gray-400">
+          /100
+        </span>
+      </p>
+
+      {change !== null && (
+        <p
+          className={`text-xs mt-1 font-medium ${
+            change >= 0
+              ? 'text-green-600'
+              : 'text-red-600'
+          }`}
+        >
+          {change >= 0 ? '+' : ''}
+          {change.toFixed(1)}
+        </p>
+      )}
+    </>
+
+  ) : (
+
+    <p className="text-sm text-gray-400">
+      No score
+    </p>
+
+  )}
+
+</div>
 
                     </div>
 
@@ -1129,139 +1346,13 @@ const downloadReport = async (type) => {
 
         )}
 
-      </div>
-
-
-     {/* =====================================================
-          REPORTS & INSIGHTS
-      ====================================================== */}
-
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-8">
-
-        <h2 className="font-semibold text-lg text-gray-800">
-          Reports & Insights
-        </h2>
-
-        <p className="text-sm text-gray-500 mt-1 mb-5">
-          Download professional summaries of your skincare progress.
-        </p>
-
-        <div className="grid sm:grid-cols-2 gap-5">
-
-          {/* WEEKLY */}
-
-          <div className="border border-gray-200 rounded-xl p-5">
-
-            <h3 className="font-semibold text-gray-800">
-              Weekly Professional Report
-            </h3>
-
-            <p className="text-sm text-gray-500 mt-2">
-              Summary of your last 7 days of progress,
-              routine consistency and skin-health score.
-            </p>
-
-            <div className="mt-4 text-sm text-gray-600 space-y-2">
-
-              <div className="flex justify-between">
-                <span>Current score</span>
-
-                <span className="font-semibold">
-                  {overviewScore != null
-                    ? `${overviewScore.toFixed(1)}/100`
-                    : 'Not available'}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Routine adherence</span>
-
-                <span className="font-semibold">
-                  {routineAdherence}%
-                </span>
-              </div>
-
-            </div>
-
-            <button
-              type="button"
-              onClick={() => downloadReport('weekly')}
-              className="mt-5 w-full bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-lg text-sm font-semibold"
-            >
-              Download Weekly PDF
-            </button>
-
-          </div>
-
-
-          {/* MONTHLY */}
-
-          <div className="border border-gray-200 rounded-xl p-5">
-
-            <h3 className="font-semibold text-gray-800">
-              Monthly Professional Report
-            </h3>
-
-            <p className="text-sm text-gray-500 mt-2">
-              Detailed summary of your last 30 days,
-              including progress and photo comparison.
-            </p>
-
-            <div className="mt-4 text-sm text-gray-600 space-y-2">
-
-              <div className="flex justify-between">
-                <span>Current score</span>
-
-                <span className="font-semibold">
-                  {overviewScore != null
-                    ? `${overviewScore.toFixed(1)}/100`
-                    : 'Not available'}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Photo comparison</span>
-
-                <span className="font-semibold">
-                  {beforeScore != null && currentScore != null
-                    ? `${beforeScore.toFixed(1)} → ${currentScore.toFixed(1)}`
-                    : 'Upload both'}
-                </span>
-              </div>
-
-            </div>
-
-            <button
-              type="button"
-              onClick={() => downloadReport('monthly')}
-              className="mt-5 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-semibold"
-            >
-              Download Monthly PDF
-            </button>
-
-          </div>
-
-        </div>
-
-        <div className="mt-5 p-4 rounded-lg bg-gray-50 border border-gray-100">
-
-          <p className="text-xs text-gray-500">
-            <span className="font-semibold text-gray-700">
-              Note:
-            </span>{' '}
-            Reports are generated from your recorded skincare
-            information and AI-assisted analysis. They are for
-            personal progress tracking and informational purposes,
-            not medical diagnosis.
-          </p>
-
-        </div>
-
-      </div>
+      </section>
 
     </div>
   )
 }
+
+
 // =========================================================
 // PHOTO CARD
 // =========================================================
@@ -1275,7 +1366,7 @@ function PhotoCard({
 }) {
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
 
       {/* IMAGE */}
 
@@ -1309,50 +1400,51 @@ function PhotoCard({
 
       </div>
 
-
       {/* DETAILS */}
 
       <div className="p-4">
 
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-1">
 
-          <h3 className="font-semibold text-gray-800">
+          <h3 className="font-semibold text-gray-900">
             {title}
           </h3>
 
-
           {photo?.skin_health_score != null && (
-            <span className="text-sm font-semibold text-primary-600">
+
+            <span className="text-sm font-bold text-purple-700">
               {Number(
                 photo.skin_health_score
               ).toFixed(1)}
               /100
             </span>
+
           )}
 
         </div>
 
-
         {photo?.skin_health_score != null && (
-          <p className="text-xs text-gray-500 mb-2">
+
+          <p className="text-xs text-gray-500">
             AI skin-health score
           </p>
+
         )}
 
-
         {photo?.created_at && (
-          <p className="text-xs text-gray-400 mb-3">
+
+          <p className="text-xs text-gray-400 mt-1 mb-3">
             Analyzed on{' '}
             {new Date(
               photo.created_at
             ).toLocaleDateString()}
           </p>
-        )}
 
+        )}
 
         <label className="block">
 
-          <span className="inline-flex items-center justify-center w-full px-4 py-2 rounded-lg bg-black text-white text-sm font-medium cursor-pointer hover:bg-gray-800">
+          <span className="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg bg-black text-white text-sm font-medium cursor-pointer hover:bg-gray-800">
 
             {uploading
               ? 'Analyzing with AI...'
@@ -1361,7 +1453,6 @@ function PhotoCard({
                 : `Upload ${title} Photo`}
 
           </span>
-
 
           <input
             type="file"
