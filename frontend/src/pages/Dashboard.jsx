@@ -18,11 +18,11 @@ import {
 import client from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
-import PremiumStatCard from "../components/dashboard/PremiumStatCard";
+import PremiumStatCard from "../components/Dashboard/PremiumStatCard";
 import AIInsights from "../components/Dashboard/AIInsights";
-import RoutineCard from "../components/dashboard/RoutineCard";
-import ProductCard from "../components/dashboard/ProductCard";
-import ProgressChart from "../components/dashboard/ProgressChart";
+import RoutineCard from "../components/Dashboard/RoutineCard";
+import ProductCard from "../components/Dashboard/ProductCard";
+import ProgressChart from "../components/Dashboard/ProgressChart";
 
 export default function Dashboard() {
   // ============================================================
