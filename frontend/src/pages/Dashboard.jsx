@@ -19,7 +19,7 @@ import client from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 import PremiumStatCard from "../components/dashboard/PremiumStatCard";
-import AIInsights from "../components/dashboard/AIInsights";
+import AIInsights from "../components/Dashboard/AIInsights";
 import RoutineCard from "../components/dashboard/RoutineCard";
 import ProductCard from "../components/dashboard/ProductCard";
 import ProgressChart from "../components/dashboard/ProgressChart";
