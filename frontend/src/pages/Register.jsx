@@ -407,7 +407,8 @@ export default function Register() {
               {/* GOOGLE */}
 
               <a
-                href="/api/auth/google/login"
+        
+                href={`${import.meta.env.VITE_API_URL}/auth/google/login`}
                 className="w-full h-10 flex items-center justify-center gap-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
               >
 

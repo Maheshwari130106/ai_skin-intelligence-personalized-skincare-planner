@@ -267,7 +267,8 @@ export default function Login() {
 
             {/* Google */}
             <a
-              href="/api/auth/google/login"
+             
+              href={`${import.meta.env.VITE_API_URL}/auth/google/login`}
               className="w-full h-14 flex items-center justify-center gap-3 border border-gray-200 rounded-xl text-gray-800 font-medium hover:bg-gray-50 hover:border-gray-300 transition"
             >
               <svg width="20" height="20" viewBox="0 0 18 18">
